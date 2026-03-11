@@ -1,0 +1,183 @@
+/* ==============================================
+   MoveHome CRM - Login Screen
+   ============================================== */
+
+.login-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-base);
+    overflow: hidden;
+}
+
+.login-screen.hidden {
+    display: none;
+}
+
+.login-error {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.login-error.hidden {
+    display: none;
+}
+
+.login-container {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 440px;
+    padding: 20px;
+}
+
+.login-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 40px 36px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-500), #8B5CF6, var(--primary-400));
+}
+
+.login-logo {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.logo-icon {
+    display: inline-flex;
+    margin-bottom: 12px;
+}
+
+.logo-text {
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-400), #A78BFA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.logo-tagline {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: 4px;
+}
+
+.login-form {
+    margin-bottom: 28px;
+}
+
+.login-form .btn-primary {
+    padding: 12px;
+    font-size: 0.9375rem;
+    margin-top: 8px;
+}
+
+.demo-credentials {
+    text-align: center;
+}
+
+.demo-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.demo-accounts {
+    display: flex;
+    gap: 10px;
+}
+
+.demo-account {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    color: var(--text-primary);
+}
+
+.demo-account:hover {
+    border-color: var(--primary-500);
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.demo-role {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--primary-400);
+    letter-spacing: 0.5px;
+}
+
+.demo-email {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Decorative circles */
+.login-decoration {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.decoration-circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.06;
+}
+
+.circle-1 {
+    width: 500px;
+    height: 500px;
+    background: var(--primary-500);
+    top: -150px;
+    right: -100px;
+}
+
+.circle-2 {
+    width: 300px;
+    height: 300px;
+    background: #8B5CF6;
+    bottom: -80px;
+    left: -50px;
+}
+
+.circle-3 {
+    width: 200px;
+    height: 200px;
+    background: var(--primary-400);
+    top: 50%;
+    left: 10%;
+}
