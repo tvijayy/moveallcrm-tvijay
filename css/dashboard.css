@@ -232,9 +232,14 @@
 }
 
 /* Expanded search for secondary pages */
+.main-header:not(.header-dashboard) .header-right {
+    flex: 1;
+    margin-left: 32px;
+}
+
 .main-header:not(.header-dashboard) .search-box {
     flex: 1;
-    max-width: 600px;
+    max-width: none;
 }
 
 .main-header:not(.header-dashboard) .search-box input {
