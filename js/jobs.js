@@ -22,6 +22,12 @@ async function loadJobsData() {
     const params = { limit: 200 };
     if (currentJobsView === 'upcoming') params.view = 'upcoming';
     else if (currentJobsView === 'past') params.view = 'past';
+    else if (currentJobsView === 'archived') params.view = 'archived';
+
+    const statusFilter = document.getElementById('jobs-status-filter')?.value;
+    if (statusFilter && statusFilter !== 'all') {
+        params.status = statusFilter;
+    }
 
     try {
         const res = await api.get('/jobs', params);
@@ -35,7 +41,6 @@ async function loadJobsData() {
                 (`${j.first_name || ''} ${j.last_name || ''}`).toLowerCase().includes(q) ||
                 (j.phone || '').toLowerCase().includes(q) ||
                 (j.email || '').toLowerCase().includes(q) ||
-                (j.team || '').toLowerCase().includes(q) ||
                 (j.contractor || '').toLowerCase().includes(q) ||
                 (j.invoice || '').toLowerCase().includes(q)
             );
@@ -49,15 +54,12 @@ async function loadJobsData() {
 
         // Show/hide the correct view container
         const masterView = document.getElementById('jobs-master-view');
-        const teamView = document.getElementById('jobs-team-view');
         const calView = document.getElementById('jobs-calendar-view');
 
-        if (masterView) masterView.classList.toggle('hidden', currentJobsView === 'team' || currentJobsView === 'calendar');
-        if (teamView) teamView.classList.toggle('hidden', currentJobsView !== 'team');
+        if (masterView) masterView.classList.toggle('hidden', currentJobsView === 'calendar');
         if (calView) calView.classList.toggle('hidden', currentJobsView !== 'calendar');
 
-        if (currentJobsView === 'team') renderTeamView(jobs);
-        else if (currentJobsView === 'calendar') renderCalendarView(jobs);
+        if (currentJobsView === 'calendar') renderCalendarView(jobs);
         else renderMasterView(jobs);
 
         // Start/stop auto-refresh for calendar
@@ -96,14 +98,15 @@ function renderMasterView(jobs) {
     const page = jobs.slice(start, start + JOBS_PER_PAGE);
 
     if (page.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="17" class="text-center">No jobs found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="18" class="text-center">No jobs found.</td></tr>';
         return;
     }
 
     tbody.innerHTML = page.map(j => `
         <tr data-id="${j.id}">
+            <td>${j.move_date ? formatDate(j.move_date) : '—'}</td>
             <td>${escapeHtml(j.first_name || '')} ${escapeHtml(j.last_name || '')}</td>
-            <td>${escapeHtml(j.team || '—')}</td>
+            <td><span class="status-badge status-${j.status}">${j.status || '—'}</span></td>
             <td>${escapeHtml(j.contractor || '—')}</td>
             <td>${escapeHtml(j.extras || '—')}</td>
             <td>$${(parseFloat(j.deposit) || 0).toFixed(0)}</td>
@@ -120,6 +123,7 @@ function renderMasterView(jobs) {
             <td>${escapeHtml(j.time_sheet || '—')}</td>
             <td class="actions-cell">
                 <button class="btn btn-sm btn-outline" onclick="editJob(${j.id})">Edit</button>
+                ${currentJobsView !== 'archived' ? `<button class="btn btn-sm btn-ghost" onclick="archiveJob(${j.id})">Archive</button>` : ''}
                 <button class="btn btn-sm btn-danger" onclick="deleteJob(${j.id})">Delete</button>
             </td>
         </tr>
@@ -128,37 +132,7 @@ function renderMasterView(jobs) {
     renderPagination('jobs-pagination', currentJobsPage, totalPages, (p) => { currentJobsPage = p; loadJobsData(); });
 }
 
-function renderTeamView(jobs) {
-    const tbody = document.getElementById('team-tbody');
-    if (!tbody) { console.error('team-tbody not found'); return; }
-    const grouped = {};
-    jobs.forEach(j => {
-        const team = j.team || 'Unassigned';
-        if (!grouped[team]) grouped[team] = [];
-        grouped[team].push(j);
-    });
 
-    let html = '';
-    Object.keys(grouped).sort().forEach(team => {
-        html += `<tr class="team-header"><td colspan="11" style="background:var(--bg-subtle);font-weight:600;padding:10px 16px;">${escapeHtml(team)}</td></tr>`;
-        grouped[team].forEach(j => {
-            html += `<tr data-id="${j.id}">
-                <td>${j.move_date ? formatDate(j.move_date) : '—'}</td>
-                <td>${escapeHtml(j.brand || '—')}</td>
-                <td>${escapeHtml(j.extras || '—')}</td>
-                <td>${escapeHtml(j.team || '—')}</td>
-                <td>${escapeHtml(j.phone || '—')}</td>
-                <td>${escapeHtml(j.email || '—')}</td>
-                <td title="${escapeHtml(j.move_out || '')}">${truncate(j.move_out || '—', 20)}</td>
-                <td title="${escapeHtml(j.second_stop || '')}">${truncate(j.second_stop || '—', 15)}</td>
-                <td title="${escapeHtml(j.move_in || '')}">${truncate(j.move_in || '—', 20)}</td>
-                <td><span class="sms-badge sms-${j.on_way_sms}">${j.on_way_sms === 'sent' ? '✓' : '✗'}</span></td>
-                <td><span class="sms-badge sms-${j.last_sms}">${j.last_sms === 'sent' ? '✓' : '✗'}</span></td>
-            </tr>`;
-        });
-    });
-    tbody.innerHTML = html || '<tr><td colspan="11" class="text-center">No jobs found.</td></tr>';
-}
 
 // ─── Full Calendar View ──────────────────────────────
 function renderCalendarView(jobs) {
@@ -221,15 +195,13 @@ function renderCalendarView(jobs) {
         displayJobs.forEach(j => {
             const sc = statusColors[j.status] || statusColors.scheduled;
             const name = `${j.first_name || ''} ${j.last_name || ''}`.trim() || 'Unnamed';
-            const team = j.team || '';
             const time = j.time_sheet || '';
 
             html += `<div class="cal-event" 
                 style="background:${sc.bg}; border-left: 3px solid ${sc.border}; color:${sc.text};"
                 onclick="editJob(${j.id})"
-                title="${escapeHtml(name)} | ${escapeHtml(team)} | ${time} | Status: ${j.status}">
+                title="${escapeHtml(name)} | ${time} | Status: ${j.status}">
                 <div class="cal-event-name">${escapeHtml(name)}</div>
-                ${team ? `<div class="cal-event-team">${escapeHtml(team)}</div>` : ''}
                 ${time ? `<div class="cal-event-time">🕐 ${escapeHtml(time)}</div>` : ''}
             </div>`;
         });
@@ -299,19 +271,54 @@ function showDayDetail(dateStr) {
     let msg = `Jobs on ${dateLabel}:\n\n`;
     dayJobs.forEach((j, i) => {
         const name = `${j.first_name || ''} ${j.last_name || ''}`.trim();
-        msg += `${i + 1}. ${name} — ${j.team || 'No team'} — ${j.time_sheet || 'No time'} — ${j.status}\n`;
+        msg += `${i + 1}. ${name} — ${j.time_sheet || 'No time'} — ${j.status}\n`;
     });
     alert(msg);
 }
 
 // Tab switching – HTML uses data-view attribute
 document.addEventListener('DOMContentLoaded', () => {
+    // Initial filter setup
+    const initialFilter = document.getElementById('jobs-status-filter');
+    if (initialFilter) {
+        initialFilter.innerHTML = `<option value="all">All Status</option>
+                                   <option value="scheduled">Scheduled</option>
+                                   <option value="in_progress">In Progress</option>`;
+    }
+
     document.querySelectorAll('#page-jobs .tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('#page-jobs .tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentJobsView = btn.dataset.view || 'upcoming';
             currentJobsPage = 1;
+
+            const filter = document.getElementById('jobs-status-filter');
+            const filterGroup = filter?.closest('.filter-group');
+            if (filter) {
+                if (currentJobsView === 'upcoming') {
+                    filter.innerHTML = `<option value="all">All Status</option>
+                                      <option value="scheduled">Scheduled</option>
+                                      <option value="in_progress">In Progress</option>`;
+                    if (filterGroup) filterGroup.classList.remove('hidden');
+                } else if (currentJobsView === 'past') {
+                    filter.innerHTML = `<option value="all">All Status</option>
+                                      <option value="completed">Completed</option>
+                                      <option value="cancelled">Cancelled</option>`;
+                    if (filterGroup) filterGroup.classList.remove('hidden');
+                } else if (currentJobsView === 'archived') {
+                    if (filterGroup) filterGroup.classList.add('hidden');
+                } else {
+                    filter.innerHTML = `<option value="all">All Status</option>
+                                      <option value="scheduled">Scheduled</option>
+                                      <option value="in_progress">In Progress</option>
+                                      <option value="completed">Completed</option>
+                                      <option value="cancelled">Cancelled</option>`;
+                    if (filterGroup) filterGroup.classList.remove('hidden');
+                }
+                filter.value = 'all';
+            }
+
             loadJobsData();
         });
     });
@@ -342,7 +349,6 @@ async function editJob(id) {
         setJobVal('job-last-name', j.last_name);
         setJobVal('job-phone', j.phone);
         setJobVal('job-email', j.email);
-        setJobVal('job-team', j.team);
         setJobVal('job-contractor', j.contractor);
         setJobVal('job-extras', j.extras);
         setJobVal('job-deposit', j.deposit);
@@ -354,6 +360,7 @@ async function editJob(id) {
         setJobVal('job-move-date', j.move_date ? j.move_date.split('T')[0] : '');
         setJobVal('job-on-way-sms', j.on_way_sms);
         setJobVal('job-last-sms', j.last_sms);
+        setJobVal('job-status', j.status);
         openModal('job-modal');
     } catch (err) {
         showToast('Error', 'Failed to load job', 'error');
@@ -363,12 +370,18 @@ async function editJob(id) {
 async function saveJob(e) {
     e.preventDefault();
     const editId = getJobVal('job-id');
+    const submitBtn = document.getElementById('job-save-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+    }
+
     const data = {
         first_name: getJobVal('job-first-name'),
         last_name: getJobVal('job-last-name'),
         phone: getJobVal('job-phone'),
         email: getJobVal('job-email'),
-        team: getJobVal('job-team'),
+        team: null,
         contractor: getJobVal('job-contractor'),
         extras: getJobVal('job-extras'),
         deposit: getJobVal('job-deposit'),
@@ -380,7 +393,7 @@ async function saveJob(e) {
         move_date: getJobVal('job-move-date') || null,
         on_way_sms: getJobVal('job-on-way-sms'),
         last_sms: getJobVal('job-last-sms'),
-        status: 'scheduled'
+        status: getJobVal('job-status') || 'scheduled'
     };
 
     try {
@@ -394,6 +407,11 @@ async function saveJob(e) {
         }
     } catch (err) {
         showToast('Error', 'Failed to save job', 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Job';
+        }
     }
 }
 
@@ -405,5 +423,20 @@ async function deleteJob(id) {
         else showToast('Error', res.error || 'Delete failed', 'error');
     } catch (err) {
         showToast('Error', 'Failed to delete job', 'error');
+    }
+}
+
+async function archiveJob(id) {
+    if (!confirm('Archive this job?')) return;
+    try {
+        const res = await api.put(`/jobs/${id}`, { status: 'archived' });
+        if (res.success) {
+            showToast('Archived', 'Job moved to Archive', 'success');
+            loadJobsData();
+        } else {
+            showToast('Error', res.error || 'Archive failed', 'error');
+        }
+    } catch (err) {
+        showToast('Error', 'Failed to archive job', 'error');
     }
 }

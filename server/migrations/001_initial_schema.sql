@@ -1,3 +1,4 @@
+
 -- ==============================================
 -- MoveHome CRM - Updated Schema (matching frontend mock data)
 -- ==============================================
@@ -63,7 +64,7 @@ CREATE TABLE jobs (
     time_sheet      VARCHAR(50),
     move_date       DATE,
     brand           VARCHAR(100),
-    status          VARCHAR(20) DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'in_progress', 'completed', 'cancelled')),
+    status          VARCHAR(20) DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'in_progress', 'completed', 'cancelled', 'archived')),
     notes           TEXT,
     created_at      TIMESTAMP DEFAULT NOW(),
     updated_at      TIMESTAMP DEFAULT NOW()

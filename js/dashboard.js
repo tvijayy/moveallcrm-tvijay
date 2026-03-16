@@ -3,6 +3,10 @@
 async function loadDashboardData() {
     try {
         const admin = isAdmin();
+        
+        // Ensure header is in dashboard mode
+        const header = document.querySelector('.main-header');
+        if (header) header.classList.add('header-dashboard');
 
         // Fetch data — staff only gets leads + jobs
         const promises = [
@@ -93,7 +97,10 @@ async function loadDashboardData() {
         const upcomingJobs = document.getElementById('upcoming-jobs-list');
         if (upcomingJobs) {
             const today = new Date().toISOString().split('T')[0];
-            const upcoming = jobs.filter(j => j.move_date && j.move_date.split('T')[0] >= today && j.status !== 'completed').slice(0, 5);
+            const upcoming = jobs.filter(j => 
+                (!j.move_date || j.move_date.split('T')[0] >= today) && 
+                !['completed', 'cancelled', 'archived'].includes(j.status)
+            ).slice(0, 5);
             upcomingJobs.innerHTML = upcoming.length === 0
                 ? '<p class="text-center">No upcoming jobs.</p>'
                 : upcoming.map(j => `
@@ -101,7 +108,7 @@ async function loadDashboardData() {
                         <div class="activity-dot"></div>
                         <div class="activity-content">
                             <strong>${escapeHtml(j.first_name || '')} ${escapeHtml(j.last_name || '')}</strong>
-                            <span class="tag-badge">${escapeHtml(j.team || 'Unassigned')}</span>
+                            <span class="tag-badge">${escapeHtml(j.contractor || 'Unassigned')}</span>
                             <div class="activity-meta">${formatDate(j.move_date)} · ${escapeHtml(j.time_sheet || 'TBD')}</div>
                         </div>
                     </div>

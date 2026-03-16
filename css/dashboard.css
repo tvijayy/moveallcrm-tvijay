@@ -231,6 +231,16 @@
     box-shadow: none;
 }
 
+/* Expanded search for secondary pages */
+.main-header:not(.header-dashboard) .search-box {
+    flex: 1;
+    max-width: 600px;
+}
+
+.main-header:not(.header-dashboard) .search-box input {
+    width: 100%;
+}
+
 .sidebar-toggle {
     display: none;
 }

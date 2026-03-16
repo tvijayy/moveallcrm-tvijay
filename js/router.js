@@ -49,6 +49,17 @@ function navigateTo(page) {
         el.classList.toggle('active', el.dataset.page === page);
     });
 
+    // Toggle search box visibility (hidden on dashboard)
+    const searchBox = document.getElementById('global-search-box');
+    const header = document.querySelector('.main-header');
+    if (searchBox) {
+        const isDashboard = page === 'dashboard';
+        searchBox.style.display = isDashboard ? 'none' : 'flex';
+        if (header) {
+            header.classList.toggle('header-dashboard', isDashboard);
+        }
+    }
+
     // Load page data
     loadPageData(page);
 }

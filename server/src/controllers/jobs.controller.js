@@ -10,17 +10,21 @@ async function getAll(req, res, next) {
         if (status && status !== 'all') q = q.eq('status', status);
         if (search) q = q.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`);
 
-        const today = new Date().toISOString().split('T')[0];
-        if (view === 'upcoming')     { q = q.gte('move_date', today).neq('status', 'completed'); }
-        else if (view === 'past')    { q = q.lt('move_date', today); }
-        else if (view === 'archived'){ q = q.in('status', ['completed', 'cancelled']); }
+        if (view === 'upcoming')     { q = q.in('status', ['scheduled', 'in_progress']).or(`move_date.gte.${today},move_date.is.null`); }
+        else if (view === 'past')    { q = q.in('status', ['completed', 'cancelled']).lt('move_date', today); }
+        else if (view === 'archived'){ q = q.eq('status', 'archived'); }
 
         q = q.order('move_date', { ascending: false })
              .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
 
         const { data, error, count } = await q;
-        if (error) throw error;
+        if (error) {
+            console.error('Jobs Query Error:', error);
+            throw error;
+        }
 
+        console.log(`[JOBS] Fetched view='${view}', found ${count} jobs.`);
+        
         res.json({ success: true, data, pagination: { total: count, limit: parseInt(limit), offset: parseInt(offset) } });
     } catch (error) { next(error); }
 }

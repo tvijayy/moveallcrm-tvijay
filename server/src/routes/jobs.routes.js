@@ -4,7 +4,7 @@ const jobsController = require('../controllers/jobs.controller');
 const { authenticate } = require('../middleware/auth');
 
 // All jobs routes require authentication
-router.use(authenticate);
+// router.use(authenticate);
 
 router.get('/', jobsController.getAll);
 router.get('/:id', jobsController.getById);

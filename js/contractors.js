@@ -9,10 +9,15 @@ function setContractorVal(id, v) { const el = document.getElementById(id); if (e
 
 async function loadContractorsData() {
     try {
+        const catFilter = document.getElementById('contractors-category-filter')?.value;
         const res = await api.get('/contractors', { limit: 200 });
         if (!res.success) { showToast('Error', res.error || 'Failed to load contractors', 'error'); return; }
 
         let data = res.data || [];
+        
+        if (catFilter && catFilter !== 'all') {
+            data = data.filter(c => c.category === catFilter);
+        }
 
         // Apply global search
         const q = (document.getElementById('global-search')?.value || '').toLowerCase().trim();

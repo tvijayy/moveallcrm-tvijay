@@ -5,16 +5,25 @@ const LEADS_PER_PAGE = 10;
 let currentLeadsTab = 'active';
 
 async function loadLeadsData() {
-    const statusFilter = currentLeadsTab === 'active'
+    const tabStatusPaths = currentLeadsTab === 'active'
         ? ['new', 'contacted', 'quoted']
         : ['won', 'lost'];
+
+    const userStatus = document.getElementById('leads-status-filter')?.value;
 
     try {
         const res = await api.get('/leads', { limit: 200 });
         if (!res.success) { showToast('Error', res.error || 'Failed to load leads', 'error'); return; }
 
         let leads = res.data || [];
-        leads = leads.filter(l => statusFilter.includes(l.status));
+        
+        // Filter by tab
+        leads = leads.filter(l => tabStatusPaths.includes(l.status));
+
+        // Filter by dropdown
+        if (userStatus && userStatus !== 'all') {
+            leads = leads.filter(l => l.status === userStatus);
+        }
 
         // Apply global search
         const q = (document.getElementById('global-search')?.value || '').toLowerCase().trim();
@@ -81,8 +90,16 @@ function renderLeadsTable(leads) {
     renderPagination('leads-pagination', currentLeadsPage, totalPages, (p) => { currentLeadsPage = p; loadLeadsData(); });
 }
 
-// Tab switching – HTML uses data-view attribute
 document.addEventListener('DOMContentLoaded', () => {
+    // Initial filter setup
+    const initialFilter = document.getElementById('leads-status-filter');
+    if (initialFilter) {
+        initialFilter.innerHTML = `<option value="all">All Status</option>
+                                   <option value="new">New</option>
+                                   <option value="contacted">Contacted</option>
+                                   <option value="quoted">Quoted</option>`;
+    }
+
     document.querySelectorAll('#page-leads .tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('#page-leads .tab-btn').forEach(b => b.classList.remove('active'));
@@ -90,6 +107,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const view = btn.dataset.view || 'active';
             currentLeadsTab = view === 'completed' ? 'completed' : 'active';
             currentLeadsPage = 1;
+            
+            const filter = document.getElementById('leads-status-filter');
+            if (filter) {
+                filter.innerHTML = currentLeadsTab === 'active' 
+                    ? `<option value="all">All Status</option>
+                       <option value="new">New</option>
+                       <option value="contacted">Contacted</option>
+                       <option value="quoted">Quoted</option>`
+                    : `<option value="all">All Status</option>
+                       <option value="won">Won</option>
+                       <option value="lost">Lost</option>`;
+                filter.value = 'all';
+            }
+
             loadLeadsData();
         });
     });

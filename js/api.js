@@ -128,9 +128,13 @@ const api = {
 
         if (status && status !== 'all') qs += `&status=eq.${status}`;
         if (segment === 'jobs') {
-            if (view === 'upcoming') qs += `&move_date=gte.${today}&status=neq.completed`;
+            if (!status || status === 'all') {
+                if (view === 'upcoming') qs += `&status=in.(scheduled,in_progress)`;
+                else if (view === 'past') qs += `&status=in.(completed,cancelled)`;
+                else if (view === 'archived') qs += `&status=eq.archived`;
+            }
+            if (view === 'upcoming') qs += `&or=(move_date.gte.${today},move_date.is.null)`;
             else if (view === 'past') qs += `&move_date=lt.${today}`;
-            else if (view === 'archived') qs += `&status=in.(completed,cancelled)`;
             qs += '&order=move_date.desc';
         }
         if (entity_type) qs += `&entity_type=eq.${entity_type}`;
