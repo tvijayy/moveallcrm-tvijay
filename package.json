@@ -1,0 +1,13 @@
+{
+  "name": "moveall-crm",
+  "version": "1.0.0",
+  "description": "MoveAll CRM - Full Stack Application",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "cd server && npm run dev",
+    "install:server": "cd server && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

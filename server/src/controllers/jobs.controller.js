@@ -4,6 +4,7 @@ const { supabase } = require('../config/database');
 async function getAll(req, res, next) {
     try {
         const { status, search, view, limit = 50, offset = 0 } = req.query;
+        const today = new Date().toISOString().split('T')[0];
 
         let q = supabase.from('jobs').select('*', { count: 'exact' });
 

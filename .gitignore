@@ -1,14 +1,19 @@
 # Dependencies
 node_modules/
+server/node_modules/
 
 # Environment variables — NEVER commit these (contains secrets/API keys)
 .env
 .env.local
 .env.production
+server/.env
+server/.env.local
+server/.env.production
 
 # Logs
 *.log
 npm-debug.log*
+server_output.txt
 
 # OS files
 .DS_Store
@@ -20,3 +25,7 @@ build/
 
 # Temporary files
 tmp/
+*.tmp
+tmp_check_jobs.js
+fix_db.js
+test_api.js

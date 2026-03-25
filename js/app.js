@@ -199,8 +199,28 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Sidebar toggle
-    document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
-        document.getElementById('sidebar')?.classList.toggle('collapsed');
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    
+    toggleBtn?.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+            sidebar?.classList.toggle('open');
+        } else {
+            sidebar?.classList.toggle('collapsed');
+        }
+    });
+
+    // Close sidebar on mobile when clicking a nav item or outside
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && sidebar?.classList.contains('open')) {
+            const isClickInsideSidebar = sidebar.contains(e.target);
+            const isClickOnToggle = toggleBtn.contains(e.target);
+            const isClickOnNavItem = e.target.closest('.nav-item');
+            
+            if (isClickOnNavItem || (!isClickInsideSidebar && !isClickOnToggle)) {
+                sidebar.classList.remove('open');
+            }
+        }
     });
 
     // Form submissions are handled via inline onsubmit="..." in index.html
