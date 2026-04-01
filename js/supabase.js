@@ -110,7 +110,7 @@ const supabaseAuth = {
     async login(email, password) {
         // Fetch user by email
         const res = await fetch(
-            `${SUPABASE_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=id,name,email,role,password_hash&limit=1`,
+            `${SUPABASE_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=id,name,email,role,phone,password_hash&limit=1`,
             { headers: db._headers() }
         );
         if (!res.ok) throw new Error('Login failed');
@@ -132,7 +132,7 @@ const supabaseAuth = {
         if (!verified) throw new Error('Invalid email or password.');
 
         // Store session
-        const sessionUser = { id: user.id, name: user.name, email: user.email, role: user.role };
+        const sessionUser = { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone || null };
         localStorage.setItem('movehome_user', JSON.stringify(sessionUser));
         return sessionUser;
     },

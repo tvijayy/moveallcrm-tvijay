@@ -70,12 +70,23 @@ function showDashboard() {
 
 function updateUserInfo() {
     if (!currentUser) return;
+    // Sidebar footer
     const nameEl   = document.getElementById('user-name');
     const roleEl   = document.getElementById('user-role');
     const avatarEl = document.getElementById('user-avatar');
     if (nameEl)   nameEl.textContent   = currentUser.name;
     if (roleEl)   roleEl.textContent   = currentUser.role === 'admin' ? 'Administrator' : 'Staff Member';
     if (avatarEl) avatarEl.textContent = currentUser.name.charAt(0).toUpperCase();
+
+    // Dashboard profile card
+    const dashAvatar = document.getElementById('dash-user-avatar');
+    const dashName   = document.getElementById('dash-user-name');
+    const dashRole   = document.getElementById('dash-user-role');
+    const dashPhone  = document.getElementById('dash-user-phone');
+    if (dashAvatar) dashAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+    if (dashName)   dashName.textContent   = currentUser.name;
+    if (dashRole)   dashRole.textContent   = currentUser.role === 'admin' ? 'Administrator' : 'Staff Member';
+    if (dashPhone)  dashPhone.textContent  = currentUser.phone ? '📞 ' + currentUser.phone : '';
 }
 
 function applyRBAC() {

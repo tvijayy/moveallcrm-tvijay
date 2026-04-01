@@ -1,5 +1,16 @@
 // MoveHome CRM - Main Application
-// Utility functions, event wiring, and initialization
+window.addEventListener('error', function(event) {
+    const errorMsg = document.createElement('div');
+    errorMsg.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:red;color:white;z-index:999999;padding:20px;font-size:16px;white-space:pre-wrap;text-align:left;height:100vh;overflow:auto;';
+    errorMsg.innerHTML = `<strong>CRITICAL ERROR DETECTED</strong><br><br>${event.message}<br>File: ${event.filename}<br>Line: ${event.lineno}:${event.colno}<br><br>${event.error?.stack || ''}`;
+    document.body.appendChild(errorMsg);
+});
+window.addEventListener('unhandledrejection', function(event) {
+    const errorMsg = document.createElement('div');
+    errorMsg.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:red;color:white;z-index:999999;padding:20px;font-size:16px;white-space:pre-wrap;text-align:left;height:100vh;overflow:auto;';
+    errorMsg.innerHTML = `<strong>UNHANDLED PROMISE REJECTION</strong><br><br>${event.reason?.message || event.reason}<br><br>${event.reason?.stack || ''}`;
+    document.body.appendChild(errorMsg);
+});
 
 // =============================================
 // UTILITY FUNCTIONS
@@ -10,6 +21,15 @@ function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+// Safely escape strings for inline JS handlers inside HTML template literals
+function escapeJsAttr(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '&quot;');
 }
 
 function truncate(str, len) {

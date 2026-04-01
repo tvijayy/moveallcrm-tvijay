@@ -9,10 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/login.css">
-    <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/styles.css?v=4">
+    <link rel="stylesheet" href="css/login.css?v=4">
+    <link rel="stylesheet" href="css/dashboard.css?v=4">
+    <link rel="stylesheet" href="css/components.css?v=4">
 </head>
 
 <body>
@@ -283,26 +283,28 @@
 
             <!-- Dashboard Page -->
             <div class="page-container active" id="page-dashboard">
-                <div class="stats-grid" id="stats-grid">
-                    <!-- Stat cards rendered by JS -->
+
+                <!-- Logged-in User Profile Card -->
+                <div class="dash-user-card" id="dash-user-card">
+                    <div class="dash-user-avatar" id="dash-user-avatar">A</div>
+                    <div class="dash-user-info">
+                        <div class="dash-user-name" id="dash-user-name">Loading…</div>
+                        <div class="dash-user-role" id="dash-user-role"></div>
+                        <div class="dash-user-phone" id="dash-user-phone"></div>
+                    </div>
                 </div>
-                <div class="dashboard-grid">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>Recent Leads</h3>
-                        </div>
-                        <div class="card-body" id="recent-leads-list">
-                            <p class="text-muted">Loading...</p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>Upcoming Jobs</h3>
-                        </div>
-                        <div class="card-body" id="upcoming-jobs-list">
-                            <p class="text-muted">Loading...</p>
+
+                <!-- Jobs Calendar -->
+                <div class="dash-calendar-section">
+                    <div class="dash-calendar-header">
+                        <h2 class="dash-calendar-title">Jobs Calendar</h2>
+                        <div class="dash-cal-controls">
+                            <button class="btn btn-ghost" id="dash-cal-prev">&#8592; Prev</button>
+                            <span id="dash-cal-month-label" class="dash-cal-label">Loading…</span>
+                            <button class="btn btn-ghost" id="dash-cal-next">Next &#8594;</button>
                         </div>
                     </div>
+                    <div class="calendar-grid" id="dash-calendar-grid"></div>
                 </div>
             </div>
 
@@ -311,44 +313,83 @@
                 <div class="tabs-bar" id="leads-tabs">
                     <button class="tab-btn active" data-view="active">Active Leads</button>
                     <button class="tab-btn" data-view="completed">Completed Leads</button>
+                    <button class="tab-btn" data-view="archive">Archive</button>
                 </div>
-                <div class="filters-bar">
+                <div class="filters-bar" style="flex-wrap:wrap;gap:8px;">
                     <div class="filter-group">
                         <label for="leads-status-filter">Status:</label>
-                        <select id="leads-status-filter" class="filter-select">
+                        <select id="leads-status-filter" class="filter-select" onchange="currentLeadsPage=1;loadLeadsData()">
                             <option value="all">All Status</option>
-                            <option value="new">New</option>
-                            <option value="contacted">Contacted</option>
+                            <option value="discussing_considering">Discussing/Considering</option>
+                            <option value="email_sent">Email Sent</option>
+                            <option value="left_vm">Left VM</option>
+                            <option value="new_to_call">New to call</option>
                             <option value="quoted">Quoted</option>
-                            <option value="won">Won</option>
-                            <option value="lost">Lost</option>
+                            <option value="sms_sent">SMS Sent</option>
+                            <option value="to_be_scheduled">To Be Scheduled</option>
+                            <option value="booking_form_sent">Booking Form Sent</option>
+                            <option value="awaiting_quote">Awaiting Quote</option>
+                            <option value="no_ans_sms_sent">No Ans SMS Sent</option>
+                            <option value="checkin_sms_sent">Checkin SMS Sent</option>
                         </select>
                     </div>
-                    <div class="results-count"><span id="leads-count">0</span> leads</div>
+                    <div class="filter-group">
+                        <label for="leads-cat-filter">Category:</label>
+                        <select id="leads-cat-filter" class="filter-select" onchange="currentLeadsPage=1;loadLeadsData()">
+                            <option value="all">All Categories</option>
+                            <option value="Local Move">Local Move</option>
+                            <option value="Interstate Move">Interstate Move</option>
+                            <option value="Regional Move">Regional Move</option>
+                            <option value="On-Site / Internal Move">On-Site / Internal Move</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="leads-source-filter">Lead Source:</label>
+                        <select id="leads-source-filter" class="filter-select" onchange="currentLeadsPage=1;loadLeadsData()">
+                            <option value="all">All Sources</option>
+                            <option value="Inbound Email">Inbound Email</option>
+                            <option value="Inbound Phone Call">Inbound Phone Call</option>
+                            <option value="Manually Added">Manually Added</option>
+                            <option value="Referral">Referral</option>
+                        </select>
+                    </div>
+                    <div class="results-count" style="margin-left:auto"><span id="leads-count">0</span> leads</div>
                 </div>
                 <div class="table-container table-scroll">
                     <table class="data-table" id="leads-table">
                         <thead>
                             <tr>
                                 <th>Lead Name</th>
-                                <th>Last Updated At</th>
+                                <th>Last Updated</th>
                                 <th>Status</th>
-                                <th>Extra Request</th>
+                                <th>Category</th>
+                                <th>Extra Requests</th>
                                 <th>Phone Number</th>
-                                <th>Emails</th>
+                                <th>Email</th>
                                 <th>Move Date</th>
-                                <th>Last SMS</th>
-                                <th>Last Email</th>
-                                <th>Actions</th>
+                                <th>Preferred Start</th>
+                                <th>Move Out Address</th>
+                                <th>Move In Address</th>
+                                <th>Rough Size</th>
+                                <th>Access Issues</th>
+                                <th>Heavy Items</th>
+                                <th>SMS No Ans</th>
+                                <th>SMS After Hours</th>
+                                <th>SMS 1st Checkin</th>
+                                <th>SMS 2nd Nudge</th>
+                                <th>SMS 3rd &amp; Final</th>
+                                <th>SMS Replies</th>
+                                <th>Email Sent</th>
+                                <th>Lead Month</th>
+                                <th>Lead Created</th>
+                                <th>Comments</th>
+                                <th>Lead Source</th>
+                                <th style="text-align:center">Complete</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="leads-tbody"></tbody>
                     </table>
-                    <div class="empty-state hidden" id="leads-empty">
-                        <div class="empty-icon">📋</div>
-                        <h3>No leads found</h3>
-                        <p>Add your first lead to get started</p>
-                    </div>
                 </div>
                 <div class="pagination" id="leads-pagination"></div>
             </div>
@@ -576,94 +617,167 @@
 
     <!-- Lead Modal -->
     <div class="modal-overlay hidden" id="lead-modal">
-        <div class="modal">
+        <div class="modal modal-lg" style="max-width:680px">
             <div class="modal-header">
-                <h2 id="lead-modal-title">Add New Lead</h2>
+                <div>
+                    <h2 id="lead-modal-title">Add New Lead</h2>
+                    <p style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">Adds a new lead to the New Leads list. Use for when a lead comes in via non automated channels, ie direct phone call.</p>
+                </div>
                 <button class="modal-close" onclick="closeModal('lead-modal')">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
+                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                 </button>
             </div>
-            <form id="lead-form" class="modal-form" onsubmit="saveLead(event)">
+            <form id="lead-form" class="modal-form" onsubmit="saveLead(event)" style="max-height:80vh;overflow-y:auto;padding-right:4px">
                 <input type="hidden" id="lead-id">
-                <div class="form-row">
-                    <div class="form-group"><label for="lead-customer-name">Lead Name *</label><input type="text"
-                            id="lead-customer-name" required></div>
-                    <div class="form-group"><label for="lead-phone">Phone Number</label><input type="tel"
-                            id="lead-phone"></div>
+
+                <!-- Lead Name -->
+                <div class="form-group">
+                    <label for="lead-customer-name">Lead Name *</label>
+                    <input type="text" id="lead-customer-name" required placeholder="Full name">
                 </div>
-                <div class="form-row">
-                    <div class="form-group"><label for="lead-email">Email</label><input type="email" id="lead-email">
+
+                <!-- Lead Source (button group) -->
+                <div class="form-group">
+                    <label>Lead Source *</label>
+                    <input type="hidden" id="lead-source-hidden">
+                    <div class="btn-group-grid" id="lead-source-group">
+                        <button type="button" class="btn-group-opt" data-value="Inbound Email">Inbound Email</button>
+                        <button type="button" class="btn-group-opt" data-value="Inbound Phone Call">Inbound Phone Call</button>
+                        <button type="button" class="btn-group-opt" data-value="Manually Added">Manually Added</button>
+                        <button type="button" class="btn-group-opt" data-value="Referral">Referral</button>
                     </div>
-                    <div class="form-group"><label for="lead-move-date">Move Date</label><input type="date"
-                            id="lead-move-date"></div>
                 </div>
+
+                <!-- Phone + Move Date -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="lead-status">Status</label>
-                        <select id="lead-status">
-                            <option value="new">New</option>
-                            <option value="contacted">Contacted</option>
-                            <option value="quoted">Quoted</option>
-                            <option value="won">Won</option>
-                            <option value="lost">Lost</option>
-                        </select>
+                        <label for="lead-phone">Phone Number *</label>
+                        <input type="tel" id="lead-phone" required>
                     </div>
-                    <div class="form-group"><label for="lead-extra-request">Extra Request</label><input type="text"
-                            id="lead-extra-request" placeholder="e.g. Piano, Packing materials"></div>
+                    <div class="form-group">
+                        <label for="lead-move-date">Move Date *</label>
+                        <input type="date" id="lead-move-date" required>
+                    </div>
                 </div>
 
-                <!-- SMS & Email Actions (only visible when editing a lead) -->
+                <!-- Preferred Start + Email -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="lead-preferred-start">Preferred Start Time</label>
+                        <input type="text" id="lead-preferred-start" placeholder="e.g. 9am, Afternoon">
+                    </div>
+                    <div class="form-group">
+                        <label for="lead-email">Email *</label>
+                        <input type="email" id="lead-email" required>
+                    </div>
+                </div>
+
+                <!-- Move Out + Move In Address -->
+                <div class="form-group">
+                    <label for="lead-move-out">Move Out Address *</label>
+                    <input type="text" id="lead-move-out" required placeholder="Full pickup address">
+                </div>
+                <div class="form-group">
+                    <label for="lead-move-in">Move In Address *</label>
+                    <input type="text" id="lead-move-in" required placeholder="Full delivery address">
+                </div>
+
+                <!-- Status (button group) -->
+                <div class="form-group">
+                    <label>Status *</label>
+                    <input type="hidden" id="lead-status-hidden">
+                    <div class="btn-group-grid" id="lead-status-group">
+                        <button type="button" class="btn-group-opt" data-value="discussing_considering">Discussing/Considering</button>
+                        <button type="button" class="btn-group-opt" data-value="email_sent">Email Sent</button>
+                        <button type="button" class="btn-group-opt" data-value="left_vm">Left VM</button>
+                        <button type="button" class="btn-group-opt" data-value="new_to_call">New to call</button>
+                        <button type="button" class="btn-group-opt" data-value="quoted">Quoted</button>
+                        <button type="button" class="btn-group-opt" data-value="sms_sent">SMS Sent</button>
+                        <button type="button" class="btn-group-opt" data-value="to_be_scheduled">To Be Scheduled</button>
+                    </div>
+                </div>
+
+                <!-- Category (button group) -->
+                <div class="form-group">
+                    <label>Category *</label>
+                    <input type="hidden" id="lead-category-hidden">
+                    <div class="btn-group-grid" id="lead-category-group">
+                        <button type="button" class="btn-group-opt" data-value="Interstate Move">Interstate Move</button>
+                        <button type="button" class="btn-group-opt" data-value="Local Move">Local Move</button>
+                        <button type="button" class="btn-group-opt" data-value="On-Site / Internal Move">On-Site / Internal Move</button>
+                        <button type="button" class="btn-group-opt" data-value="Regional Move">Regional Move</button>
+                    </div>
+                </div>
+
+                <!-- Rough Size -->
+                <div class="form-group">
+                    <label for="lead-rough-size">Rough Size</label>
+                    <input type="text" id="lead-rough-size" placeholder="e.g. 3 bedroom house, studio apartment">
+                </div>
+
+                <!-- Heavy Items (dropdown + admin add) -->
+                <div class="form-group">
+                    <div style="display:flex;align-items:center;justify-content:space-between">
+                        <label for="lead-heavy-items">Heavy Items</label>
+                        <button type="button" class="btn btn-sm btn-ghost add-option-btn" style="display:none;gap:4px" onclick="addDropdownOption('heavy_items')">
+                            + Add Option
+                        </button>
+                    </div>
+                    <select id="lead-heavy-items" class="filter-select" style="width:100%">
+                        <option value="">— Select —</option>
+                    </select>
+                </div>
+
+                <!-- Extra Requests (dropdown + admin add) -->
+                <div class="form-group">
+                    <div style="display:flex;align-items:center;justify-content:space-between">
+                        <label for="lead-extra-request-select">Extra Requests</label>
+                        <button type="button" class="btn btn-sm btn-ghost add-option-btn" style="display:none;gap:4px" onclick="addDropdownOption('extra_requests')">
+                            + Add Option
+                        </button>
+                    </div>
+                    <select id="lead-extra-request-select" class="filter-select" style="width:100%">
+                        <option value="">— Select —</option>
+                    </select>
+                </div>
+
+                <!-- Access Issues (dropdown + admin add) -->
+                <div class="form-group">
+                    <div style="display:flex;align-items:center;justify-content:space-between">
+                        <label for="lead-access-issues">Access Issues</label>
+                        <button type="button" class="btn btn-sm btn-ghost add-option-btn" style="display:none;gap:4px" onclick="addDropdownOption('access_issues')">
+                            + Add Option
+                        </button>
+                    </div>
+                    <select id="lead-access-issues" class="filter-select" style="width:100%">
+                        <option value="">— Select —</option>
+                    </select>
+                </div>
+
+                <!-- SMS & Email Actions (only visible when editing) -->
                 <div id="lead-actions-panel" class="lead-actions-panel hidden">
                     <div class="actions-divider"></div>
-
-                    <!-- SMS Actions -->
                     <div class="webhook-section">
                         <h4 class="webhook-section-title">📱 SMS Actions</h4>
                         <div class="webhook-contact-info" id="lead-sms-info">
                             Send SMS to: <strong id="lead-sms-phone">—</strong>
                         </div>
                         <div class="webhook-btn-grid">
-                            <button type="button" class="webhook-btn webhook-sms-1"
-                                onclick="triggerLeadWebhook('sms_no_answer')">
-                                📵 SMS No Answer
-                            </button>
-                            <button type="button" class="webhook-btn webhook-sms-2"
-                                onclick="triggerLeadWebhook('sms_after_hours')">
-                                🌙 SMS After Hours
-                            </button>
-                            <button type="button" class="webhook-btn webhook-sms-3"
-                                onclick="triggerLeadWebhook('sms_1st_checkin')">
-                                🔔 SMS 1st Check-in
-                            </button>
-                            <button type="button" class="webhook-btn webhook-sms-4"
-                                onclick="triggerLeadWebhook('sms_2nd_nudge')">
-                                🔔 SMS 2nd Nudge
-                            </button>
-                            <button type="button" class="webhook-btn webhook-sms-5"
-                                onclick="triggerLeadWebhook('sms_3rd_final')">
-                                🏳 SMS 3rd &amp; Final Try
-                            </button>
+                            <button type="button" class="webhook-btn webhook-sms-1" onclick="triggerLeadWebhook('sms_no_answer')">📵 SMS No Answer</button>
+                            <button type="button" class="webhook-btn webhook-sms-2" onclick="triggerLeadWebhook('sms_after_hours')">🌙 SMS After Hours</button>
+                            <button type="button" class="webhook-btn webhook-sms-3" onclick="triggerLeadWebhook('sms_1st_checkin')">🔔 SMS 1st Check-in</button>
+                            <button type="button" class="webhook-btn webhook-sms-4" onclick="triggerLeadWebhook('sms_2nd_nudge')">🔔 SMS 2nd Nudge</button>
+                            <button type="button" class="webhook-btn webhook-sms-5" onclick="triggerLeadWebhook('sms_3rd_final')">🏳 SMS 3rd &amp; Final Try</button>
                         </div>
                     </div>
-
-                    <!-- Email Actions -->
                     <div class="webhook-section">
                         <h4 class="webhook-section-title">✉️ Email Booking Form</h4>
-                        <div class="webhook-contact-info" id="lead-email-info">
-                            ✉ <strong id="lead-email-address">—</strong>
-                        </div>
+                        <div class="webhook-contact-info" id="lead-email-info">✉ <strong id="lead-email-address">—</strong></div>
                         <div class="webhook-btn-grid">
-                            <button type="button" class="webhook-btn webhook-email-1"
-                                onclick="triggerLeadWebhook('email_2m_booking')">
-                                ✉ Email 2M Booking Form
-                            </button>
-                            <button type="button" class="webhook-btn webhook-email-2"
-                                onclick="triggerLeadWebhook('email_3m_booking')">
-                                ✉ Email 3M Booking Form
-                            </button>
+                            <button type="button" class="webhook-btn webhook-email-1" onclick="triggerLeadWebhook('email_2m_booking')">✉ Email 2M Booking Form</button>
+                            <button type="button" class="webhook-btn webhook-email-2" onclick="triggerLeadWebhook('email_3m_booking')">✉ Email 3M Booking Form</button>
                         </div>
                     </div>
                 </div>
@@ -674,9 +788,10 @@
                 </div>
             </form>
         </div>
-    </div>
+
 
     <!-- Job Modal -->
+
     <div class="modal-overlay hidden" id="job-modal">
         <div class="modal modal-lg">
             <div class="modal-header">
@@ -983,19 +1098,43 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toast-container"></div>
 
+    <!-- ── Comments Panel (slide-in from right) ───────────────────── -->
+    <!-- IMPORTANT: Must be before scripts so getElementById works on first load -->
+    <div id="comments-overlay" class="comments-overlay" onclick="closeCommentsPanel()"></div>
+    <div id="comments-panel" class="comments-panel">
+        <div class="comments-panel-header">
+            <div>
+                <h3 id="comments-panel-title" style="margin:0;font-size:1rem">Comments</h3>
+                <p id="comments-panel-sub" style="margin:2px 0 0;font-size:0.78rem;color:var(--text-muted)"></p>
+            </div>
+            <button onclick="closeCommentsPanel()" class="ctx-dots-btn" title="Close">✕</button>
+        </div>
+        <div id="comments-list" class="comments-list">
+            <div style="text-align:center;padding:32px;color:var(--text-muted)">Loading comments…</div>
+        </div>
+        <div class="comments-input-area">
+            <textarea id="comment-input" placeholder="Write a comment…" rows="3"></textarea>
+            <button class="btn btn-primary" onclick="addComment()">
+                <span>💬</span> Add Comment
+            </button>
+        </div>
+    </div>
+
     <!-- Scripts -->
-    <script src="js/supabase.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/router.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/leads.js"></script>
-    <script src="js/jobs.js"></script>
-    <script src="js/storage.js"></script>
-    <script src="js/contacts.js"></script>
-    <script src="js/contractors.js"></script>
-    <script src="js/users.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/supabase.js?v=8"></script>
+    <script src="js/api.js?v=8"></script>
+    <script src="js/auth.js?v=8"></script>
+    <script src="js/router.js?v=8"></script>
+    <script src="js/dashboard.js?v=8"></script>
+    <script src="js/leads.js?v=8"></script>
+    <script src="js/jobs.js?v=8"></script>
+    <script src="js/storage.js?v=8"></script>
+    <script src="js/contacts.js?v=8"></script>
+    <script src="js/contractors.js?v=8"></script>
+    <script src="js/users.js?v=8"></script>
+    <script src="js/app.js?v=8"></script>
+
 </body>
+
 
 </html>

@@ -10,6 +10,8 @@ const contractorsRoutes = require('./contractors.routes');
 const usersRoutes = require('./users.routes');
 const logsRoutes = require('./logs.routes');
 const webhooksRoutes = require('./webhooks.routes');
+const dropdownRoutes  = require('./dropdown.routes');
+const commentsRoutes  = require('./comments.routes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -21,5 +23,7 @@ router.use('/contractors', contractorsRoutes);
 router.use('/users', usersRoutes);
 router.use('/logs', logsRoutes);
 router.use('/webhooks', webhooksRoutes);
+router.use('/dropdown-options', dropdownRoutes);
+router.use('/', commentsRoutes);
 
 module.exports = router;

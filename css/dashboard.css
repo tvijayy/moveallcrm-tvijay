@@ -431,3 +431,92 @@
         padding: 16px;
     }
 }
+
+/* ── Dashboard User Profile Card ─────────────────────────────── */
+.dash-user-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px 28px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-sm);
+}
+
+.dash-user-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-500), #8B5CF6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.dash-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dash-user-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.dash-user-role {
+    font-size: 0.875rem;
+    color: var(--primary-400);
+    font-weight: 500;
+}
+
+.dash-user-phone {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+/* ── Dashboard Calendar Section ──────────────────────────────── */
+.dash-calendar-section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.dash-calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.dash-calendar-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.dash-cal-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dash-cal-label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 140px;
+    text-align: center;
+}

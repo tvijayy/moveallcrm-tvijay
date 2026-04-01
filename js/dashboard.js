@@ -1,121 +1,155 @@
-// MoveHome CRM – Dashboard Module (API-connected)
+// MoveHome CRM – Dashboard Module
+
+// Dashboard calendar state (separate from Jobs page calendar)
+let dashCalYear, dashCalMonth;
+let dashJobsCache = [];
+(function initDashCalDate() {
+    const now = new Date();
+    dashCalYear  = now.getFullYear();
+    dashCalMonth = now.getMonth();
+})();
 
 async function loadDashboardData() {
     try {
-        const admin = isAdmin();
-        
-        // Ensure header is in dashboard mode
-        const header = document.querySelector('.main-header');
-        if (header) header.classList.add('header-dashboard');
+        // ── 1. Populate logged-in user card ──────────────────
+        const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+        if (user) {
+            const avatarEl = document.getElementById('dash-user-avatar');
+            const nameEl   = document.getElementById('dash-user-name');
+            const roleEl   = document.getElementById('dash-user-role');
+            const phoneEl  = document.getElementById('dash-user-phone');
 
-        // Fetch data — staff only gets leads + jobs
-        const promises = [
-            api.get('/leads', { limit: 200 }),
-            api.get('/jobs', { limit: 200 })
-        ];
-        if (admin) {
-            promises.push(api.get('/storage', { limit: 200 }));
-            promises.push(api.get('/contacts', { limit: 200 }));
+            if (avatarEl) avatarEl.textContent = (user.name || 'U').charAt(0).toUpperCase();
+            if (nameEl)   nameEl.textContent   = user.name  || '—';
+            if (roleEl)   roleEl.textContent   = user.role === 'admin' ? 'Administrator' : (user.role || 'Staff');
+            if (phoneEl)  phoneEl.textContent  = user.phone ? '📞 ' + user.phone : '';
         }
 
-        const results = await Promise.all(promises);
-        const leads = results[0].success ? results[0].data : [];
-        const jobs = results[1].success ? results[1].data : [];
-        const storage = admin && results[2]?.success ? results[2].data : [];
-        const contacts = admin && results[3]?.success ? results[3].data : [];
+        // ── 2. Fetch all jobs for the calendar ────────────────
+        const res = await api.get('/jobs', { limit: 500 });
+        dashJobsCache = res.success ? (res.data || []) : [];
 
-        // --- Stat Cards ---
-        const statCards = document.getElementById('stats-grid');
-        if (statCards) {
-            let html = `
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-                    </div>
-                    <div class="stat-info">
-                        <div class="stat-value">${leads.length}</div>
-                        <div class="stat-label">Total Leads</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                    </div>
-                    <div class="stat-info">
-                        <div class="stat-value">${jobs.length}</div>
-                        <div class="stat-label">Total Jobs</div>
-                    </div>
-                </div>
-            `;
-
-            // Admin-only stat cards
-            if (admin) {
-                html += `
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                        </div>
-                        <div class="stat-info">
-                            <div class="stat-value">${storage.filter(s => s.status === 'active').length}</div>
-                            <div class="stat-label">Active Storage</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                        </div>
-                        <div class="stat-info">
-                            <div class="stat-value">${contacts.length}</div>
-                            <div class="stat-label">Contacts</div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            statCards.innerHTML = html;
-        }
-
-        // --- Recent Leads ---
-        const recentLeads = document.getElementById('recent-leads-list');
-        if (recentLeads) {
-            const latest = leads.slice(0, 5);
-            recentLeads.innerHTML = latest.length === 0
-                ? '<p class="text-center">No leads yet.</p>'
-                : latest.map(l => `
-                    <div class="activity-item">
-                        <div class="activity-dot status-dot-${l.status}"></div>
-                        <div class="activity-content">
-                            <strong>${escapeHtml(l.customer_name)}</strong>
-                            <span class="status-badge status-${l.status}">${l.status}</span>
-                            <div class="activity-meta">${l.move_date ? 'Move: ' + formatDate(l.move_date) : 'No date set'}</div>
-                        </div>
-                    </div>
-                `).join('');
-        }
-
-        // --- Upcoming Jobs ---
-        const upcomingJobs = document.getElementById('upcoming-jobs-list');
-        if (upcomingJobs) {
-            const today = new Date().toISOString().split('T')[0];
-            const upcoming = jobs.filter(j => 
-                (!j.move_date || j.move_date.split('T')[0] >= today) && 
-                !['completed', 'cancelled', 'archived'].includes(j.status)
-            ).slice(0, 5);
-            upcomingJobs.innerHTML = upcoming.length === 0
-                ? '<p class="text-center">No upcoming jobs.</p>'
-                : upcoming.map(j => `
-                    <div class="activity-item">
-                        <div class="activity-dot"></div>
-                        <div class="activity-content">
-                            <strong>${escapeHtml(j.first_name || '')} ${escapeHtml(j.last_name || '')}</strong>
-                            <span class="tag-badge">${escapeHtml(j.contractor || 'Unassigned')}</span>
-                            <div class="activity-meta">${formatDate(j.move_date)} · ${escapeHtml(j.time_sheet || 'TBD')}</div>
-                        </div>
-                    </div>
-                `).join('');
-        }
+        // ── 3. Render the dashboard calendar ─────────────────
+        renderDashCalendar(dashJobsCache);
 
     } catch (err) {
         console.error('Dashboard load error:', err);
     }
 }
+
+// ─── Dashboard Calendar Renderer ──────────────────────────────────────────────
+function renderDashCalendar(jobs) {
+    const grid = document.getElementById('dash-calendar-grid');
+    if (!grid) return;
+
+    const today    = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+    const firstDay    = new Date(dashCalYear, dashCalMonth, 1).getDay();
+    const daysInMonth = new Date(dashCalYear, dashCalMonth + 1, 0).getDate();
+    const monthNames  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    // Update label
+    const label = document.getElementById('dash-cal-month-label');
+    if (label) label.textContent = `${monthNames[dashCalMonth]} ${dashCalYear}`;
+
+    // Group jobs by date
+    const jobsByDate = {};
+    jobs.forEach(j => {
+        if (j.move_date) {
+            const d = j.move_date.split('T')[0];
+            if (!jobsByDate[d]) jobsByDate[d] = [];
+            jobsByDate[d].push(j);
+        }
+    });
+
+    const statusColors = {
+        scheduled:   { bg: 'rgba(99,102,241,0.15)',  border: '#6366f1', text: '#a5b4fc' },
+        in_progress: { bg: 'rgba(245,158,11,0.15)',  border: '#f59e0b', text: '#fbbf24' },
+        completed:   { bg: 'rgba(16,185,129,0.15)',  border: '#10b981', text: '#6ee7b7' },
+        cancelled:   { bg: 'rgba(239,68,68,0.15)',   border: '#ef4444', text: '#fca5a5' }
+    };
+
+    let html = '';
+
+    // Day-of-week headers
+    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(day => {
+        html += `<div class="cal-header">${day}</div>`;
+    });
+
+    // Empty cells before 1st
+    for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+
+    // Day cells
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${dashCalYear}-${String(dashCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dayJobs = jobsByDate[dateStr] || [];
+        const isToday = dateStr === todayStr;
+
+        html += `<div class="cal-day ${isToday ? 'today' : ''} ${dayJobs.length ? 'has-jobs' : ''}" data-date="${dateStr}">`;
+        html += `<div class="cal-date ${isToday ? 'today-date' : ''}">${d}${dayJobs.length ? ` <span class="cal-job-count">${dayJobs.length}</span>` : ''}</div>`;
+
+        dayJobs.slice(0, 3).forEach(j => {
+            const sc   = statusColors[j.status] || statusColors.scheduled;
+            const name = `${j.first_name||''} ${j.last_name||''}`.trim() || 'Unnamed';
+            const time = j.time_sheet || '';
+            html += `<div class="cal-event"
+                style="background:${sc.bg}; border-left:3px solid ${sc.border}; color:${sc.text};"
+                onclick="editJob(${j.id})"
+                title="${escapeHtml(name)} | ${time} | ${j.status}">
+                <div class="cal-event-name">${escapeHtml(name)}</div>
+                ${time ? `<div class="cal-event-time">🕐 ${escapeHtml(time)}</div>` : ''}
+            </div>`;
+        });
+
+        if (dayJobs.length > 3) {
+            html += `<div class="cal-event-more" onclick="dashShowDayDetail('${dateStr}')">+${dayJobs.length - 3} more</div>`;
+        }
+
+        // Add job button
+        html += `<div class="cal-add-btn" onclick="addJobForDate('${dateStr}')" title="Add job for ${monthNames[dashCalMonth]} ${d}">+</div>`;
+        html += '</div>';
+    }
+
+    // Trailing empty cells
+    const totalCells = firstDay + daysInMonth;
+    const remainder  = totalCells % 7;
+    if (remainder > 0) {
+        for (let i = 0; i < 7 - remainder; i++) html += '<div class="cal-day empty"></div>';
+    }
+
+    grid.innerHTML = html;
+}
+
+function dashCalPrev() {
+    dashCalMonth--;
+    if (dashCalMonth < 0) { dashCalMonth = 11; dashCalYear--; }
+    renderDashCalendar(dashJobsCache);
+}
+
+function dashCalNext() {
+    dashCalMonth++;
+    if (dashCalMonth > 11) { dashCalMonth = 0; dashCalYear++; }
+    renderDashCalendar(dashJobsCache);
+}
+
+function dashShowDayDetail(dateStr) {
+    const dayJobs = dashJobsCache.filter(j => j.move_date && j.move_date.split('T')[0] === dateStr);
+    if (!dayJobs.length) return;
+    const dateObj   = new Date(dateStr + 'T12:00:00');
+    const dateLabel = dateObj.toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    let msg = `Jobs on ${dateLabel}:\n\n`;
+    dayJobs.forEach((j, i) => {
+        const name = `${j.first_name||''} ${j.last_name||''}`.trim();
+        msg += `${i+1}. ${name} — ${j.time_sheet||'No time'} — ${j.status}\n`;
+    });
+    alert(msg);
+}
+
+// Wire up prev/next buttons after DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    const prevBtn = document.getElementById('dash-cal-prev');
+    const nextBtn = document.getElementById('dash-cal-next');
+    if (prevBtn) prevBtn.addEventListener('click', dashCalPrev);
+    if (nextBtn) nextBtn.addEventListener('click', dashCalNext);
+});
