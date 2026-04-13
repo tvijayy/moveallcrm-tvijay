@@ -34,7 +34,11 @@ function navigateTo(page) {
     if (config.action) {
         actionBtn.style.display = 'inline-flex';
         document.getElementById('page-action-text').textContent = config.action.text;
-        actionBtn.onclick = () => openCreateModal(config.action.modal);
+        if (page === 'jobs') {
+            actionBtn.onclick = () => openJobBrandPicker();
+        } else {
+            actionBtn.onclick = () => openCreateModal(config.action.modal);
+        }
     } else {
         actionBtn.style.display = 'none';
     }
@@ -68,7 +72,7 @@ function loadPageData(page) {
     switch (page) {
         case 'dashboard': loadDashboardData(); break;
         case 'leads': loadLeadsData(); break;
-        case 'jobs': loadJobsData(); break;
+        case 'jobs': loadContractorsForJobs(); loadJobsData(); break;
         case 'storage': loadStorageData(); break;
         case 'contacts': loadContactsData(); break;
         case 'contractors': loadContractorsData(); break;

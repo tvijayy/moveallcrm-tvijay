@@ -402,9 +402,38 @@
                     <button class="tab-btn" data-view="calendar">Calendar View</button>
                     <button class="tab-btn" data-view="archived">Archived Jobs</button>
                 </div>
-                <div class="filters-bar">
+                <div class="filters-bar" style="flex-wrap:wrap;gap:8px">
                     <div class="filter-group">
-                        <label for="jobs-status-filter">Status:</label>
+                        <label>Brand:</label>
+                        <select id="jobs-brand-filter" class="filter-select">
+                            <option value="all">All Brands</option>
+                            <option value="MoveAll">MoveAll</option>
+                            <option value="TBMI">TBMI</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Price Point:</label>
+                        <select id="jobs-price-filter" class="filter-select">
+                            <option value="all">All Prices</option>
+                            <option value="$199ph (2M+T Eco)">$199ph (2M+T Eco)</option>
+                            <option value="$220ph (2M+T Prem)">$220ph (2M+T Prem)</option>
+                            <option value="$270ph (3M+T Eco)">$270ph (3M+T Eco)</option>
+                            <option value="$299ph (3M+T Prem)">$299ph (3M+T Prem)</option>
+                            <option value="$154ph (Butler Rates)">$154ph (Butler Rates)</option>
+                            <option value="$159.50ph (Styling Rates)">$159.50ph (Styling Rates)</option>
+                            <option value="Interstate Fixed Price">Interstate Fixed Price</option>
+                            <option value="$225.50ph (3M Butler Rates)">$225.50ph (3M Butler Rates)</option>
+                            <option value="$264ph (3M + 2 Truck Butler Rate)">$264ph (3M + 2 Truck Butler Rate)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Contractor:</label>
+                        <select id="jobs-contractor-filter" class="filter-select">
+                            <option value="all">All Contractors</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Status:</label>
                         <select id="jobs-status-filter" class="filter-select">
                             <option value="all">All Status</option>
                             <option value="scheduled">Scheduled</option>
@@ -421,23 +450,20 @@
                     <table class="data-table" id="jobs-table">
                         <thead>
                             <tr>
-                                <th>Move Date</th>
                                 <th>Client</th>
-                                <th>Status</th>
+                                <th>Price Point</th>
+                                <th>Brand</th>
+                                <th>Date</th>
+                                <th>Private Notes</th>
+                                <th>Team</th>
                                 <th>Assign Contractor</th>
                                 <th>Extras</th>
                                 <th>Deposit</th>
-                                <th>Invoice</th>
+                                <th>Move Out</th>
+                                <th>Move In</th>
                                 <th>Phone</th>
-                                <th>Email</th>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Move Out Address</th>
-                                <th>2nd Stop</th>
-                                <th>Move In Address</th>
                                 <th>On Way SMS</th>
                                 <th>Last SMS</th>
-                                <th>Time Sheet</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -788,57 +814,169 @@
                 </div>
             </form>
         </div>
+    </div>
 
 
-    <!-- Job Modal -->
-
-    <div class="modal-overlay hidden" id="job-modal">
-        <div class="modal modal-lg">
+    <!-- Brand Picker Modal (shown before Job Modal for new jobs) -->
+    <div class="modal-overlay hidden" id="job-brand-picker">
+        <div class="modal" style="max-width:420px">
             <div class="modal-header">
-                <h2 id="job-modal-title">Add New Job</h2>
-                <button class="modal-close" onclick="closeModal('job-modal')">
+                <div>
+                    <h2 style="margin:0;font-size:1.1rem">Is this a MoveAll, or a Butler Job?</h2>
+                </div>
+                <button class="modal-close" onclick="closeModal('job-brand-picker')">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
+                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                 </button>
             </div>
-            <form id="job-form" class="modal-form" onsubmit="saveJob(event)">
-                <input type="hidden" id="job-id">
-                <div class="form-row">
-                    <div class="form-group"><label for="job-first-name">First Name *</label><input type="text"
-                            id="job-first-name" required></div>
-                    <div class="form-group"><label for="job-last-name">Last Name</label><input type="text"
-                            id="job-last-name"></div>
+            <div style="padding:24px 24px 8px">
+                <label style="display:block;margin-bottom:10px;font-weight:600;font-size:0.9rem">Brand *</label>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <button type="button" id="brand-pick-moveall"
+                        class="btn btn-outline brand-pick-btn"
+                        style="padding:12px 20px;font-size:1rem;text-align:left;border-radius:8px;border:2px solid var(--border)"
+                        onclick="selectBrandPick('MoveAll')">MoveAll</button>
+                    <button type="button" id="brand-pick-tbmi"
+                        class="btn btn-outline brand-pick-btn"
+                        style="padding:12px 20px;font-size:1rem;text-align:left;border-radius:8px;border:2px solid var(--border)"
+                        onclick="selectBrandPick('TBMI')">TBMI</button>
                 </div>
+            </div>
+            <div style="padding:16px 24px 24px">
+                <button type="button" class="btn btn-primary" style="width:100%;padding:12px;font-size:1rem"
+                    onclick="confirmBrandPick()">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Modal -->
+    <div class="modal-overlay hidden" id="job-modal">
+        <div class="modal modal-lg" style="max-width:600px;padding:0;overflow:hidden">
+            <!-- Brand Banner -->
+            <div id="job-brand-banner" style="width:100%;min-height:90px;display:flex;align-items:center;justify-content:center;position:relative">
+                <button class="modal-close" onclick="closeModal('job-modal')" style="position:absolute;top:10px;right:12px;z-index:10;background:rgba(0,0,0,.4);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+                <div id="job-brand-logo-inner" style="text-align:center;padding:18px 24px"></div>
+            </div>
+
+            <form id="job-form" class="modal-form" onsubmit="saveJob(event)" style="padding:24px;max-height:72vh;overflow-y:auto">
+                <input type="hidden" id="job-id">
+                <input type="hidden" id="job-brand">
+
+                <!-- Job Name -->
+                <div class="form-group">
+                    <label for="job-first-name">Job Name *</label>
+                    <input type="text" id="job-first-name" required placeholder="e.g. TBMI - Helen and Mario">
+                </div>
+
+                <!-- Date + Time -->
                 <div class="form-row">
-                    <div class="form-group"><label for="job-phone">Phone</label><input type="tel" id="job-phone"></div>
-                    <div class="form-group"><label for="job-email">Email</label><input type="email" id="job-email">
+                    <div class="form-group">
+                        <label for="job-move-date">Date *</label>
+                        <input type="date" id="job-move-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="job-start-time">Start Time</label>
+                        <input type="time" id="job-start-time" value="09:00">
+                    </div>
+                </div>
+
+                <!-- Addresses -->
+                <div class="form-group">
+                    <label for="job-move-out">Move Out Address *</label>
+                    <input type="text" id="job-move-out" required placeholder="Pickup address">
+                </div>
+                <div class="form-group">
+                    <label for="job-move-in">Move In Address *</label>
+                    <input type="text" id="job-move-in" required placeholder="Delivery address">
+                </div>
+                <div class="form-group">
+                    <label for="job-second-stop">2nd Stop (optional)</label>
+                    <input type="text" id="job-second-stop" placeholder="Additional stop address">
+                </div>
+
+                <!-- Price Point -->
+                <div class="form-group">
+                    <label for="job-price-point">Price Point *</label>
+                    <select id="job-price-point" required>
+                        <option value="">— Select Price Point —</option>
+                        <option value="$199ph (2M+T Eco)">$199ph (2M+T Eco)</option>
+                        <option value="$220ph (2M+T Prem)">$220ph (2M+T Prem)</option>
+                        <option value="$270ph (3M+T Eco)">$270ph (3M+T Eco)</option>
+                        <option value="$299ph (3M+T Prem)">$299ph (3M+T Prem)</option>
+                        <option value="$154ph (Butler Rates)">$154ph (Butler Rates)</option>
+                        <option value="$159.50ph (Styling Rates)">$159.50ph (Styling Rates)</option>
+                        <option value="Interstate Fixed Price">Interstate Fixed Price</option>
+                        <option value="$225.50ph (3M Butler Rates)">$225.50ph (3M Butler Rates)</option>
+                        <option value="$264ph (3M + 2 Truck Butler Rate)">$264ph (3M + 2 Truck Butler Rate)</option>
+                    </select>
+                </div>
+
+                <!-- Contractor -->
+                <div class="form-group">
+                    <label for="job-contractor">Assign a Contractor *</label>
+                    <select id="job-contractor" required>
+                        <option value="">— Select Contractor —</option>
+                    </select>
+                </div>
+
+                <!-- Private Notes -->
+                <div class="form-group">
+                    <label for="job-notes">Private Notes</label>
+                    <textarea id="job-notes" rows="2" placeholder="Internal notes..." style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);resize:vertical;font-size:0.9rem"></textarea>
+                </div>
+
+                <!-- Customer Name -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="job-last-name">Job: First Name *</label>
+                        <input type="text" id="job-last-name" required placeholder="Customer first name">
+                    </div>
+                    <div class="form-group">
+                        <label for="job-cust-last">Job: Last Name</label>
+                        <input type="text" id="job-cust-last" placeholder="Customer last name">
+                    </div>
+                </div>
+
+                <!-- Contact -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="job-phone">Phone *</label>
+                        <input type="tel" id="job-phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="job-email">Email</label>
+                        <input type="email" id="job-email">
+                    </div>
+                </div>
+
+                <!-- Extra details -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="job-extras">Extras</label>
+                        <input type="text" id="job-extras" placeholder="e.g. Piano, Packing">
+                    </div>
+                    <div class="form-group">
+                        <label for="job-deposit">Deposit ($)</label>
+                        <input type="number" id="job-deposit" step="0.01" min="0">
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label for="job-move-date">Move Date</label><input type="date" id="job-move-date"></div>
-                    <div class="form-group"><label for="job-contractor">Assign Contractor</label><input type="text"
-                            id="job-contractor" placeholder="Contractor name"></div>
+                    <div class="form-group">
+                        <label for="job-invoice">Invoice</label>
+                        <input type="text" id="job-invoice" placeholder="Invoice #">
+                    </div>
+                    <div class="form-group">
+                        <label for="job-time-sheet">Time Sheet</label>
+                        <input type="text" id="job-time-sheet" placeholder="e.g. 8am–5pm">
+                    </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group"><label for="job-extras">Extras</label><input type="text" id="job-extras"
-                            placeholder="e.g. Piano, Packing"></div>
-                    <div class="form-group"><label for="job-deposit">Deposit</label><input type="number"
-                            id="job-deposit" step="0.01"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label for="job-invoice">Invoice</label><input type="text" id="job-invoice"
-                            placeholder="Invoice #"></div>
-                    <div class="form-group"><label for="job-time-sheet">Time Sheet</label><input type="text"
-                            id="job-time-sheet" placeholder="e.g. 8am-5pm"></div>
-                </div>
-                <div class="form-group"><label for="job-move-out">Move Out Address</label><input type="text"
-                        id="job-move-out"></div>
-                <div class="form-group"><label for="job-second-stop">2nd Stop</label><input type="text"
-                        id="job-second-stop"></div>
-                <div class="form-group"><label for="job-move-in">Move In Address</label><input type="text"
-                        id="job-move-in"></div>
+
+                <!-- Status & SMS -->
                 <div class="form-row">
                     <div class="form-group">
                         <label for="job-status">Status</label>
@@ -850,8 +988,6 @@
                             <option value="archived">Archived</option>
                         </select>
                     </div>
-                </div>
-                <div class="form-row">
                     <div class="form-group">
                         <label for="job-on-way-sms">On Way SMS</label>
                         <select id="job-on-way-sms">
@@ -859,6 +995,8 @@
                             <option value="sent">Sent</option>
                         </select>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label for="job-last-sms">Last SMS</label>
                         <select id="job-last-sms">
@@ -867,9 +1005,13 @@
                         </select>
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('job-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="job-save-btn">Save Job</button>
+
+                <!-- Actions -->
+                <div class="modal-actions" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px">
+                    <button type="button" class="btn btn-secondary" id="job-prev-btn"
+                        onclick="jobGoBack()" style="min-width:110px">← Previous</button>
+                    <button type="submit" class="btn btn-primary" id="job-save-btn"
+                        style="min-width:160px">🗂 Submit new job</button>
                 </div>
             </form>
         </div>

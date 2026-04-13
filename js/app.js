@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const action = item.dataset.quick;
             switch (action) {
                 case 'add-lead': navigateTo('leads'); setTimeout(() => openCreateModal('lead-modal'), 100); break;
-                case 'add-job': navigateTo('jobs'); setTimeout(() => openCreateModal('job-modal'), 100); break;
+                case 'add-job': navigateTo('jobs'); setTimeout(() => openJobBrandPicker(), 100); break;
                 case 'add-contact': navigateTo('contacts'); setTimeout(() => openCreateModal('contact-modal'), 100); break;
                 case 'add-storage': navigateTo('storage'); setTimeout(() => openCreateModal('storage-modal'), 100); break;
                 case 'add-contractor': navigateTo('contractors'); setTimeout(() => openCreateModal('contractor-modal'), 100); break;
@@ -248,6 +248,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Filter changes
     document.getElementById('leads-status-filter')?.addEventListener('change', () => { currentLeadsPage = 1; loadLeadsData(); });
     document.getElementById('jobs-status-filter')?.addEventListener('change', () => { currentJobsPage = 1; loadJobsData(); });
+    document.getElementById('jobs-brand-filter')?.addEventListener('change', () => { currentJobsPage = 1; loadJobsData(); });
+    document.getElementById('jobs-price-filter')?.addEventListener('change', () => { currentJobsPage = 1; loadJobsData(); });
+    document.getElementById('jobs-contractor-filter')?.addEventListener('change', () => { currentJobsPage = 1; loadJobsData(); });
     document.getElementById('contacts-category-filter')?.addEventListener('change', () => { currentContactsPage = 1; loadContactsData(); });
     document.getElementById('contractors-category-filter')?.addEventListener('change', () => { currentContractorsPage = 1; loadContractorsData(); });
 

@@ -7,6 +7,32 @@ const JOBS_PER_PAGE = 10;
 // Calendar state
 let calYear, calMonth;
 let allJobsCache = [];
+let contractorsCache = [];
+
+async function loadContractorsForJobs() {
+    try {
+        const res = await api.get('/contractors', { limit: 200 });
+        if (res.success) {
+            contractorsCache = res.data || [];
+            // Populate contractor filter
+            const filterSel = document.getElementById('jobs-contractor-filter');
+            if (filterSel) {
+                filterSel.innerHTML = '<option value="all">All Contractors</option>' +
+                    contractorsCache.map(c => `<option value="${escapeHtml(c.company)}">${escapeHtml(c.company)}</option>`).join('');
+            }
+        }
+    } catch(e) { console.warn('Could not load contractors', e); }
+}
+
+function populateContractorDropdown() {
+    const sel = document.getElementById('job-contractor');
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— Select Contractor —</option>' +
+        contractorsCache.map(c => `<option value="${escapeHtml(c.company)}">${escapeHtml(c.company)}</option>`).join('');
+    if (current) sel.value = current;
+}
+
 let calendarRefreshInterval = null;
 (function initCalDate() {
     const now = new Date();
@@ -18,6 +44,107 @@ let calendarRefreshInterval = null;
 function getJobVal(id) { const el = document.getElementById(id); return el ? el.value : ''; }
 function setJobVal(id, v) { const el = document.getElementById(id); if (el) el.value = v || ''; }
 
+// ─── Brand Picker ─────────────────────────────────────────────────────────────
+let _selectedBrand = '';
+let _jobIsEdit = false;
+
+const BRAND_BANNERS = {
+    MoveAll: {
+        bg: 'linear-gradient(135deg,#0f2027,#203a43,#2c5364)',
+        html: `<div style="font-size:2rem;font-weight:900;letter-spacing:2px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5)">
+                    <span style="color:#4fc3f7">move</span><span style="color:#fff">all</span>
+               </div>
+               <div style="font-size:0.75rem;color:rgba(255,255,255,.6);letter-spacing:4px;margin-top:4px">MOVING SERVICES</div>`
+    },
+    TBMI: {
+        bg: 'linear-gradient(135deg,#0d0d0d,#1a1200,#2a1e00)',
+        html: `<div style="font-size:1.5rem;font-weight:900;letter-spacing:3px;color:#f5c842;text-shadow:0 2px 12px rgba(0,0,0,.7)">THE BUTLER</div>
+               <div style="font-size:1.6rem;font-weight:900;letter-spacing:4px;color:#fff;margin-top:2px">VALET</div>
+               <div style="font-size:0.65rem;color:rgba(245,200,66,.6);letter-spacing:5px;margin-top:4px">MOVE ASSIST SERVICES</div>`
+    }
+};
+
+function applyBrandBanner(brand) {
+    const banner = document.getElementById('job-brand-banner');
+    const inner  = document.getElementById('job-brand-logo-inner');
+    if (!banner || !inner) return;
+    const cfg = BRAND_BANNERS[brand] || BRAND_BANNERS['MoveAll'];
+    banner.style.background = cfg.bg;
+    inner.innerHTML = cfg.html;
+    // Auto-prefix job name input if empty
+    const nameInput = document.getElementById('job-first-name');
+    if (nameInput && !nameInput.value) {
+        nameInput.value = brand + ' - ';
+        setTimeout(() => { nameInput.focus(); nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length); }, 100);
+    }
+}
+
+// openJobBrandPicker(brand?) — if brand passed, skip picker and open form directly
+function openJobBrandPicker(brand) {
+    if (brand) {
+        // Direct open — skip picker, go straight to form
+        _selectedBrand = brand;
+        _jobIsEdit = false;
+        document.getElementById('job-id').value = '';
+        document.getElementById('job-brand').value = brand;
+        document.getElementById('job-form').reset();
+        document.getElementById('job-brand').value = brand;
+        document.getElementById('job-cust-last').value = '';
+        document.getElementById('job-start-time').value = '09:00';
+        const prevBtn = document.getElementById('job-prev-btn');
+        if (prevBtn) prevBtn.style.display = 'inline-flex';
+        applyBrandBanner(brand);
+        populateContractorDropdown();
+        openModal('job-modal');
+        return;
+    }
+    // Show picker
+    _selectedBrand = '';
+    document.querySelectorAll('.brand-pick-btn').forEach(b => {
+        b.style.borderColor = 'var(--border)';
+        b.style.background = '';
+        b.style.color = '';
+        b.style.fontWeight = '';
+    });
+    openModal('job-brand-picker');
+}
+
+function selectBrandPick(brand) {
+    _selectedBrand = brand;
+    document.querySelectorAll('.brand-pick-btn').forEach(b => {
+        const isSelected = b.textContent.trim() === brand;
+        b.style.borderColor   = isSelected ? 'var(--primary)' : 'var(--border)';
+        b.style.background    = isSelected ? 'var(--primary)' : '';
+        b.style.color         = isSelected ? '#fff' : '';
+        b.style.fontWeight    = isSelected ? '700' : '';
+    });
+}
+
+function confirmBrandPick() {
+    if (!_selectedBrand) {
+        showToast('Select Brand', 'Please choose MoveAll or TBMI first.', 'error');
+        return;
+    }
+    closeModal('job-brand-picker');
+    _jobIsEdit = false;
+    document.getElementById('job-id').value = '';
+    document.getElementById('job-brand').value = _selectedBrand;
+    document.getElementById('job-form').reset();
+    document.getElementById('job-brand').value = _selectedBrand;
+    document.getElementById('job-cust-last').value = '';
+    document.getElementById('job-start-time').value = '09:00';
+    const prevBtn = document.getElementById('job-prev-btn');
+    if (prevBtn) prevBtn.style.display = 'inline-flex';
+    applyBrandBanner(_selectedBrand);
+    populateContractorDropdown();
+    openModal('job-modal');
+}
+
+function jobGoBack() {
+    closeModal('job-modal');
+    if (!_jobIsEdit) openModal('job-brand-picker');
+}
+
 async function loadJobsData() {
     const params = { limit: 200 };
     if (currentJobsView === 'upcoming') params.view = 'upcoming';
@@ -25,24 +152,31 @@ async function loadJobsData() {
     else if (currentJobsView === 'archived') params.view = 'archived';
 
     const statusFilter = document.getElementById('jobs-status-filter')?.value;
-    if (statusFilter && statusFilter !== 'all') {
-        params.status = statusFilter;
-    }
+    if (statusFilter && statusFilter !== 'all') params.status = statusFilter;
+
+    const brandFilter = document.getElementById('jobs-brand-filter')?.value;
+    const priceFilter = document.getElementById('jobs-price-filter')?.value;
+    const contractorFilter = document.getElementById('jobs-contractor-filter')?.value;
 
     try {
         const res = await api.get('/jobs', params);
         if (!res.success) { showToast('Error', res.error || 'Failed to load jobs', 'error'); return; }
         let jobs = res.data || [];
 
+        // Apply client-side filters
+        if (brandFilter && brandFilter !== 'all') jobs = jobs.filter(j => j.brand === brandFilter);
+        if (priceFilter && priceFilter !== 'all') jobs = jobs.filter(j => j.price_point === priceFilter);
+        if (contractorFilter && contractorFilter !== 'all') jobs = jobs.filter(j => j.contractor === contractorFilter);
+
         // Apply global search
-        const q = (document.getElementById('global-search')?.value || '').toLowerCase().trim();
-        if (q) {
+        const q2 = (document.getElementById('global-search')?.value || '').toLowerCase().trim();
+        if (q2) {
             jobs = jobs.filter(j =>
-                (`${j.first_name || ''} ${j.last_name || ''}`).toLowerCase().includes(q) ||
-                (j.phone || '').toLowerCase().includes(q) ||
-                (j.email || '').toLowerCase().includes(q) ||
-                (j.contractor || '').toLowerCase().includes(q) ||
-                (j.invoice || '').toLowerCase().includes(q)
+                (`${j.first_name || ''} ${j.last_name || ''}`).toLowerCase().includes(q2) ||
+                (j.phone || '').toLowerCase().includes(q2) ||
+                (j.email || '').toLowerCase().includes(q2) ||
+                (j.contractor || '').toLowerCase().includes(q2) ||
+                (j.invoice || '').toLowerCase().includes(q2)
             );
         }
 
@@ -90,6 +224,213 @@ function stopCalendarRefresh() {
     if (calendarRefreshInterval) { clearInterval(calendarRefreshInterval); calendarRefreshInterval = null; }
 }
 
+// Price point badge colors
+const PRICE_COLORS = {
+    '$199ph (2M+T Eco)':              { bg:'#16a34a', text:'#fff' },
+    '$220ph (2M+T Prem)':             { bg:'#15803d', text:'#fff' },
+    '$270ph (3M+T Eco)':              { bg:'#0369a1', text:'#fff' },
+    '$299ph (3M+T Prem)':             { bg:'#1d4ed8', text:'#fff' },
+    '$154ph (Butler Rates)':          { bg:'#dc2626', text:'#fff' },
+    '$159.50ph (Styling Rates)':      { bg:'#7c3aed', text:'#fff' },
+    'Interstate Fixed Price':         { bg:'#2563eb', text:'#fff' },
+    '$225.50ph (3M Butler Rates)':    { bg:'#b45309', text:'#fff' },
+    '$264ph (3M + 2 Truck Butler Rate)': { bg:'#92400e', text:'#fff' },
+};
+
+const BRAND_COLORS = {
+    'MoveAll': { bg:'#16a34a', text:'#fff' },
+    'TBMI':    { bg:'#dc2626', text:'#fff' },
+};
+
+function priceBadge(pp) {
+    if (!pp) return '<span style="color:var(--text-muted)">—</span>';
+    const c = PRICE_COLORS[pp] || { bg:'#6b7280', text:'#fff' };
+    return `<span style="display:inline-block;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700;background:${c.bg};color:${c.text};white-space:nowrap">${escapeHtml(pp)}</span>`;
+}
+
+function brandBadge(b) {
+    if (!b) return '<span style="color:var(--text-muted)">—</span>';
+    const c = BRAND_COLORS[b] || { bg:'#6b7280', text:'#fff' };
+    return `<span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:0.78rem;font-weight:800;background:${c.bg};color:${c.text}">${escapeHtml(b)}</span>`;
+}
+
+function teamBadge(t) {
+    if (!t) return '<span style="color:var(--text-muted)">—</span>';
+    // Color based on hash
+    const colors = ['#7c3aed','#0369a1','#15803d','#b45309','#be123c','#0f766e'];
+    let hash = 0; for (let i = 0; i < t.length; i++) hash = t.charCodeAt(i) + ((hash << 5) - hash);
+    const col = colors[Math.abs(hash) % colors.length];
+    return `<span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:700;background:${col};color:#fff;white-space:nowrap">${escapeHtml(t)}</span>`;
+}
+
+// ─── Inline job save ─────────────────────────────────────────────────────────
+async function inlineJobSave(id, field, value) {
+    try {
+        const res = await api.put(`/jobs/${id}`, { [field]: value === '' ? null : value });
+        if (!res.success) showToast('Error', res.error || 'Save failed', 'error');
+        else showToast('Saved', '', 'success');
+    } catch(e) { showToast('Error', 'Failed to save', 'error'); }
+}
+
+// Editable text cell (click to edit inline)
+function jobEditCell(id, field, value, maxW = '130px') {
+    const display = value ? escapeHtml(String(value)) : '<span style="color:var(--text-muted);font-size:0.8rem">—</span>';
+    const safeVal = escapeHtml(String(value || ''));
+    return `<span class="editable-cell" style="max-width:${maxW};display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;min-width:40px"
+        title="${safeVal}" onclick="startJobInlineEdit(this,${id},'${field}','${safeVal}')">${display}</span>`;
+}
+
+function startJobInlineEdit(el, id, field, currentVal) {
+    if (el.dataset.editing) return;
+    el.dataset.editing = '1';
+    const orig = el.innerHTML;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentVal;
+    input.className = 'inline-edit-input';
+    input.style.cssText = 'width:120px;min-width:80px';
+    el.style.overflow = 'visible';
+    el.innerHTML = '';
+    el.appendChild(input);
+    input.focus(); input.select();
+    const save = async () => {
+        if (!el.dataset.editing) return;
+        delete el.dataset.editing;
+        el.style.overflow = 'hidden';
+        const v = input.value.trim();
+        el.innerHTML = v ? escapeHtml(v) : '<span style="color:var(--text-muted);font-size:0.8rem">—</span>';
+        if (v !== currentVal) await inlineJobSave(id, field, v);
+    };
+    const cancel = () => {
+        if (!el.dataset.editing) return;
+        delete el.dataset.editing;
+        el.style.overflow = 'hidden';
+        el.innerHTML = orig;
+    };
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+        if (e.key === 'Escape') { input.removeEventListener('blur', save); cancel(); }
+    });
+}
+
+// Inline price point select (badge click → select)
+function jobPriceCell(id, current) {
+    const opts = Object.keys(PRICE_COLORS).map(p =>
+        `<option value="${escapeHtml(p)}" ${p === current ? 'selected' : ''}>${escapeHtml(p)}</option>`
+    ).join('');
+    const c = current ? (PRICE_COLORS[current] || { bg:'#6b7280', text:'#fff' }) : null;
+    const style = c ? `background:${c.bg};color:${c.text};border:none;font-weight:700;font-size:0.75rem;border-radius:6px;padding:3px 6px;cursor:pointer;max-width:180px`
+                    : `font-size:0.82rem;max-width:180px`;
+    return `<select class="inline-select" style="${style}" onchange="inlineJobSave(${id},'price_point',this.value);updateJobPriceColor(this)">
+        <option value="">— Select —</option>${opts}
+    </select>`;
+}
+function updateJobPriceColor(sel) {
+    const c = PRICE_COLORS[sel.value] || { bg:'#6b7280', text:'#fff' };
+    sel.style.background = c.bg; sel.style.color = c.text;
+}
+
+// Inline brand select (badge click → select)
+function jobBrandCell(id, current) {
+    const brands = ['MoveAll','TBMI'];
+    const opts = brands.map(b => `<option value="${b}" ${b === current ? 'selected' : ''}>${b}</option>`).join('');
+    const c = current ? (BRAND_COLORS[current] || { bg:'#6b7280', text:'#fff' }) : { bg:'#6b7280', text:'#fff' };
+    return `<select class="inline-select" style="background:${c.bg};color:${c.text};border:none;font-weight:800;font-size:0.78rem;border-radius:6px;padding:3px 8px;cursor:pointer"
+        onchange="inlineJobSave(${id},'brand',this.value);updateJobBrandColor(this)">
+        <option value="">— Select —</option>${opts}
+    </select>`;
+}
+function updateJobBrandColor(sel) {
+    const c = BRAND_COLORS[sel.value] || { bg:'#6b7280', text:'#fff' };
+    sel.style.background = c.bg; sel.style.color = c.text;
+}
+
+// ─── Searchable contractor dropdown ──────────────────────────────────────────
+let _activeContractorDrop = null;
+
+function closeContractorDrop() {
+    if (_activeContractorDrop) { _activeContractorDrop.remove(); _activeContractorDrop = null; }
+}
+
+function jobContractorCell(jobId, current) {
+    const display = current
+        ? `<span style="font-size:0.85rem;cursor:pointer">${escapeHtml(current)}</span>`
+        : `<span style="color:var(--text-muted);font-size:0.82rem;cursor:pointer">— Assign —</span>`;
+    return `<div class="job-contractor-cell" onclick="openContractorDrop(event,${jobId},this)" style="min-width:140px;max-width:200px;cursor:pointer;user-select:none">${display}</div>`;
+}
+
+function openContractorDrop(e, jobId, triggerEl) {
+    e.stopPropagation();
+    closeContractorDrop();
+
+    const drop = document.createElement('div');
+    drop.style.cssText = `position:fixed;z-index:9999;background:var(--bg-primary,#fff);border:1px solid var(--border,#ddd);
+        border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.25);width:240px;overflow:hidden;`;
+
+    const currentVal = triggerEl.querySelector('span')?.textContent?.trim() || '';
+    // Build HTML
+    drop.innerHTML = `
+        <div style="padding:8px">
+            <input type="text" placeholder="Search..." id="ctr-search-${jobId}"
+                style="width:100%;padding:6px 10px;border-radius:6px;border:1.5px solid var(--border,#ddd);
+                    background:var(--bg-secondary,#f5f5f5);color:var(--text-primary,#111);font-size:0.85rem;box-sizing:border-box"
+                oninput="filterContractorDrop(this,${jobId})" onclick="event.stopPropagation()">
+        </div>
+        <div id="ctr-list-${jobId}" style="max-height:220px;overflow-y:auto;padding:4px 0">
+            ${buildContractorDropList(jobId, currentVal, '')}
+        </div>`;
+
+    // Position below trigger
+    const rect = triggerEl.getBoundingClientRect();
+    drop.style.top  = `${Math.min(rect.bottom + 4, window.innerHeight - 280)}px`;
+    drop.style.left = `${Math.min(rect.left, window.innerWidth - 260)}px`;
+    document.body.appendChild(drop);
+    _activeContractorDrop = drop;
+
+    // Focus search
+    setTimeout(() => document.getElementById(`ctr-search-${jobId}`)?.focus(), 50);
+    // Close on outside click
+    setTimeout(() => document.addEventListener('click', closeContractorDrop, { once: true }), 50);
+}
+
+function buildContractorDropList(jobId, currentVal, search) {
+    const s = search.toLowerCase();
+    let items = contractorsCache.filter(c => !s || c.company.toLowerCase().includes(s));
+    let html = items.map(c => {
+        const isSel = c.company === currentVal;
+        return `<div onclick="selectContractorInline(${jobId},'${escapeJsAttr(c.company)}',this)"
+            style="padding:8px 14px;cursor:pointer;font-size:0.88rem;display:flex;align-items:center;justify-content:space-between;
+                background:${isSel ? 'rgba(99,102,241,.12)' : 'transparent'}"
+            onmouseenter="this.style.background='rgba(99,102,241,.08)'"
+            onmouseleave="this.style.background='${isSel ? 'rgba(99,102,241,.12)' : 'transparent'}'">
+            <span>${escapeHtml(c.company)}</span>
+            ${isSel ? '<span style="color:#6366f1;font-weight:700">✓</span>' : ''}
+        </div>`;
+    }).join('');
+    // New TBC option
+    const tbcMatch = !s || 'new tbc'.includes(s);
+    if (tbcMatch) html += `<div onclick="selectContractorInline(${jobId},'New TBC',this)"
+        style="padding:8px 14px;cursor:pointer;font-size:0.88rem;color:#f59e0b;border-top:1px solid var(--border,#eee)"
+        onmouseenter="this.style.background='rgba(245,158,11,.08)'" onmouseleave="this.style.background='transparent'">
+        ⚠ New TBC
+    </div>`;
+    return html || '<div style="padding:12px 14px;color:var(--text-muted);font-size:0.85rem">No results</div>';
+}
+
+function filterContractorDrop(input, jobId) {
+    const list = document.getElementById(`ctr-list-${jobId}`);
+    if (list) list.innerHTML = buildContractorDropList(jobId, '', input.value);
+}
+
+async function selectContractorInline(jobId, company, el) {
+    closeContractorDrop();
+    // Update the cell in the DOM
+    const cell = document.querySelector(`tr[data-id="${jobId}"] .job-contractor-cell`);
+    if (cell) cell.innerHTML = `<span style="font-size:0.85rem;cursor:pointer">${escapeHtml(company)}</span>`;
+    await inlineJobSave(jobId, 'contractor', company);
+}
+
 function renderMasterView(jobs) {
     const tbody = document.getElementById('jobs-tbody');
     if (!tbody) { console.error('jobs-tbody not found'); return; }
@@ -98,36 +439,36 @@ function renderMasterView(jobs) {
     const page = jobs.slice(start, start + JOBS_PER_PAGE);
 
     if (page.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="18" class="text-center">No jobs found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="15" class="text-center" style="padding:32px;color:var(--text-muted)">No jobs found.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = page.map(j => `
-        <tr data-id="${j.id}">
-            <td>${j.move_date ? formatDate(j.move_date) : '—'}</td>
-            <td>${escapeHtml(j.first_name || '')} ${escapeHtml(j.last_name || '')}</td>
-            <td><span class="status-badge status-${j.status}">${j.status || '—'}</span></td>
-            <td>${escapeHtml(j.contractor || '—')}</td>
-            <td>${escapeHtml(j.extras || '—')}</td>
-            <td>$${(parseFloat(j.deposit) || 0).toFixed(0)}</td>
-            <td>${escapeHtml(j.invoice || '—')}</td>
-            <td>${escapeHtml(j.phone || '—')}</td>
-            <td>${escapeHtml(j.email || '—')}</td>
-            <td>${escapeHtml(j.first_name || '—')}</td>
-            <td>${escapeHtml(j.last_name || '—')}</td>
-            <td title="${escapeHtml(j.move_out || '')}">${truncate(j.move_out || '—', 20)}</td>
-            <td title="${escapeHtml(j.second_stop || '')}">${truncate(j.second_stop || '—', 20)}</td>
-            <td title="${escapeHtml(j.move_in || '')}">${truncate(j.move_in || '—', 20)}</td>
+    tbody.innerHTML = page.map(j => {
+        const dateStr = j.move_date ? new Date(j.move_date).toLocaleString('en-AU', {
+            day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
+        }) : '—';
+        return `<tr data-id="${j.id}">
+            <td style="font-weight:600;white-space:nowrap;min-width:140px">${jobEditCell(j.id,'first_name',j.first_name,'160px')}</td>
+            <td style="min-width:160px">${jobPriceCell(j.id, j.price_point)}</td>
+            <td>${jobBrandCell(j.id, j.brand)}</td>
+            <td style="white-space:nowrap;color:var(--text-muted);font-size:0.82rem">${dateStr}</td>
+            <td style="min-width:120px">${jobEditCell(j.id,'notes',j.notes,'160px')}</td>
+            <td style="min-width:100px">${jobEditCell(j.id,'team',j.team,'120px')}</td>
+            <td style="min-width:140px">${jobContractorCell(j.id, j.contractor)}</td>
+            <td style="min-width:90px">${jobEditCell(j.id,'extras',j.extras,'110px')}</td>
+            <td style="min-width:70px">${jobEditCell(j.id,'deposit',j.deposit,'70px')}</td>
+            <td style="min-width:120px">${jobEditCell(j.id,'move_out',j.move_out,'150px')}</td>
+            <td style="min-width:120px">${jobEditCell(j.id,'move_in',j.move_in,'150px')}</td>
+            <td style="min-width:90px">${jobEditCell(j.id,'phone',j.phone,'100px')}</td>
             <td><span class="sms-badge sms-${j.on_way_sms}">${j.on_way_sms === 'sent' ? '✓ Sent' : '✗ Not Sent'}</span></td>
             <td><span class="sms-badge sms-${j.last_sms}">${j.last_sms === 'sent' ? '✓ Sent' : '✗ Not Sent'}</span></td>
-            <td>${escapeHtml(j.time_sheet || '—')}</td>
-            <td class="actions-cell">
+            <td class="actions-cell" style="white-space:nowrap">
                 <button class="btn btn-sm btn-outline" onclick="editJob(${j.id})">Edit</button>
                 ${currentJobsView !== 'archived' ? `<button class="btn btn-sm btn-ghost" onclick="archiveJob(${j.id})">Archive</button>` : ''}
                 <button class="btn btn-sm btn-danger" onclick="deleteJob(${j.id})">Delete</button>
             </td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
 
     renderPagination('jobs-pagination', currentJobsPage, totalPages, (p) => { currentJobsPage = p; loadJobsData(); });
 }
@@ -343,13 +684,14 @@ async function editJob(id) {
         const res = await api.get(`/jobs/${id}`);
         if (!res.success) { showToast('Error', 'Job not found', 'error'); return; }
         const j = res.data;
-        document.getElementById('job-modal-title').textContent = 'Edit Job';
+        _jobIsEdit = true;
+        _selectedBrand = j.brand || 'MoveAll';
         document.getElementById('job-id').value = id;
         setJobVal('job-first-name', j.first_name);
         setJobVal('job-last-name', j.last_name);
+        setJobVal('job-cust-last', j.extras);   // extras repurposed for customer last name display
         setJobVal('job-phone', j.phone);
         setJobVal('job-email', j.email);
-        setJobVal('job-contractor', j.contractor);
         setJobVal('job-extras', j.extras);
         setJobVal('job-deposit', j.deposit);
         setJobVal('job-invoice', j.invoice);
@@ -357,10 +699,30 @@ async function editJob(id) {
         setJobVal('job-move-out', j.move_out);
         setJobVal('job-second-stop', j.second_stop);
         setJobVal('job-move-in', j.move_in);
-        setJobVal('job-move-date', j.move_date ? j.move_date.split('T')[0] : '');
+        // Split datetime into date + time
+        if (j.move_date) {
+            const dt = new Date(j.move_date);
+            setJobVal('job-move-date', j.move_date.split('T')[0]);
+            const hh = String(dt.getHours()).padStart(2, '0');
+            const mm = String(dt.getMinutes()).padStart(2, '0');
+            setJobVal('job-start-time', `${hh}:${mm}`);
+        } else {
+            setJobVal('job-move-date', '');
+            setJobVal('job-start-time', '09:00');
+        }
         setJobVal('job-on-way-sms', j.on_way_sms);
         setJobVal('job-last-sms', j.last_sms);
         setJobVal('job-status', j.status);
+        setJobVal('job-brand', j.brand);
+        setJobVal('job-price-point', j.price_point);
+        setJobVal('job-notes', j.notes);
+        populateContractorDropdown();
+        // Set contractor after dropdown is populated
+        setTimeout(() => setJobVal('job-contractor', j.contractor), 50);
+        // Hide Previous button on edit
+        const prevBtn = document.getElementById('job-prev-btn');
+        if (prevBtn) prevBtn.style.display = 'none';
+        applyBrandBanner(j.brand || 'MoveAll');
         openModal('job-modal');
     } catch (err) {
         showToast('Error', 'Failed to load job', 'error');
@@ -376,6 +738,11 @@ async function saveJob(e) {
         submitBtn.textContent = 'Saving...';
     }
 
+    // Combine date + time into a datetime string
+    const dateVal = getJobVal('job-move-date');
+    const timeVal = getJobVal('job-start-time') || '09:00';
+    const moveDatetime = dateVal ? `${dateVal}T${timeVal}:00` : null;
+
     const data = {
         first_name: getJobVal('job-first-name'),
         last_name: getJobVal('job-last-name'),
@@ -390,10 +757,13 @@ async function saveJob(e) {
         move_out: getJobVal('job-move-out'),
         second_stop: getJobVal('job-second-stop'),
         move_in: getJobVal('job-move-in'),
-        move_date: getJobVal('job-move-date') || null,
+        move_date: moveDatetime,
         on_way_sms: getJobVal('job-on-way-sms'),
         last_sms: getJobVal('job-last-sms'),
-        status: getJobVal('job-status') || 'scheduled'
+        status: getJobVal('job-status') || 'scheduled',
+        brand: getJobVal('job-brand') || null,
+        price_point: getJobVal('job-price-point') || null,
+        notes: getJobVal('job-notes') || null,
     };
 
     try {
