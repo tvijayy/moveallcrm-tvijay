@@ -317,13 +317,13 @@ function startJobInlineEdit(el, id, field, currentVal) {
 // Inline price point select (badge click → select)
 function jobPriceCell(id, current) {
     const opts = Object.keys(PRICE_COLORS).map(p =>
-        `<option value="${escapeHtml(p)}" ${p === current ? 'selected' : ''}>${escapeHtml(p)}</option>`
+        `<option value="${escapeHtml(p)}" style="background:#111827;color:#fff;" ${p === current ? 'selected' : ''}>${escapeHtml(p)}</option>`
     ).join('');
     const c = current ? (PRICE_COLORS[current] || { bg:'#6b7280', text:'#fff' }) : null;
     const style = c ? `background:${c.bg};color:${c.text};border:none;font-weight:700;font-size:0.75rem;border-radius:6px;padding:3px 6px;cursor:pointer;max-width:180px`
                     : `font-size:0.82rem;max-width:180px`;
     return `<select class="inline-select" style="${style}" onchange="inlineJobSave(${id},'price_point',this.value);updateJobPriceColor(this)">
-        <option value="">— Select —</option>${opts}
+        <option value="" style="background:#111827;color:#fff;">— Select —</option>${opts}
     </select>`;
 }
 function updateJobPriceColor(sel) {
@@ -334,11 +334,11 @@ function updateJobPriceColor(sel) {
 // Inline brand select (badge click → select)
 function jobBrandCell(id, current) {
     const brands = ['MoveAll','TBMI'];
-    const opts = brands.map(b => `<option value="${b}" ${b === current ? 'selected' : ''}>${b}</option>`).join('');
+    const opts = brands.map(b => `<option value="${b}" style="background:#111827;color:#fff;" ${b === current ? 'selected' : ''}>${b}</option>`).join('');
     const c = current ? (BRAND_COLORS[current] || { bg:'#6b7280', text:'#fff' }) : { bg:'#6b7280', text:'#fff' };
     return `<select class="inline-select" style="background:${c.bg};color:${c.text};border:none;font-weight:800;font-size:0.78rem;border-radius:6px;padding:3px 8px;cursor:pointer"
         onchange="inlineJobSave(${id},'brand',this.value);updateJobBrandColor(this)">
-        <option value="">— Select —</option>${opts}
+        <option value="" style="background:#111827;color:#fff;">— Select —</option>${opts}
     </select>`;
 }
 function updateJobBrandColor(sel) {

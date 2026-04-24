@@ -208,8 +208,8 @@ select {
 }
 
 select option {
-    background: var(--bg-surface);
-    color: var(--text-primary);
+    background-color: var(--bg-surface, #111827) !important;
+    color: var(--text-primary, #F9FAFB) !important;
 }
 
 /* ---- Card ---- */
