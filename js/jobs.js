@@ -113,10 +113,13 @@ function openJobBrandPicker(brand) {
 function selectBrandPick(brand) {
     _selectedBrand = brand;
     document.querySelectorAll('.brand-pick-btn').forEach(b => {
-        const isSelected = b.textContent.trim() === brand;
-        b.style.borderColor   = isSelected ? 'var(--primary-500)' : 'var(--border-color)';
-        b.style.background    = isSelected ? 'var(--primary-500)' : '';
-        b.style.color         = isSelected ? '#fff' : '';
+        const btnBrand = b.textContent.trim();
+        const isSelected = btnBrand === brand;
+        const brandColor = BRAND_COLORS[btnBrand] || { bg: 'var(--primary-500)', text: '#fff' };
+        
+        b.style.borderColor   = isSelected ? brandColor.bg : 'var(--border-color)';
+        b.style.background    = isSelected ? brandColor.bg : '';
+        b.style.color         = isSelected ? brandColor.text : '';
         b.style.fontWeight    = isSelected ? '700' : '';
     });
 }
