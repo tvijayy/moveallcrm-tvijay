@@ -29,7 +29,8 @@ function populateContractorDropdown() {
     if (!sel) return;
     const current = sel.value;
     sel.innerHTML = '<option value="">— Select Contractor —</option>' +
-        contractorsCache.map(c => `<option value="${escapeHtml(c.company)}">${escapeHtml(c.company)}</option>`).join('');
+        contractorsCache.map(c => `<option value="${escapeHtml(c.company)}" style="background:#111827;color:#fff;">${escapeHtml(c.company)}</option>`).join('') +
+        '<option value="New TBC" style="background:#111827;color:#f59e0b;">⚠ New TBC</option>';
     if (current) sel.value = current;
 }
 
@@ -101,7 +102,7 @@ function openJobBrandPicker(brand) {
     // Show picker
     _selectedBrand = '';
     document.querySelectorAll('.brand-pick-btn').forEach(b => {
-        b.style.borderColor = 'var(--border)';
+        b.style.borderColor = 'var(--border-color)';
         b.style.background = '';
         b.style.color = '';
         b.style.fontWeight = '';
@@ -113,8 +114,8 @@ function selectBrandPick(brand) {
     _selectedBrand = brand;
     document.querySelectorAll('.brand-pick-btn').forEach(b => {
         const isSelected = b.textContent.trim() === brand;
-        b.style.borderColor   = isSelected ? 'var(--primary)' : 'var(--border)';
-        b.style.background    = isSelected ? 'var(--primary)' : '';
+        b.style.borderColor   = isSelected ? 'var(--primary-500)' : 'var(--border-color)';
+        b.style.background    = isSelected ? 'var(--primary-500)' : '';
         b.style.color         = isSelected ? '#fff' : '';
         b.style.fontWeight    = isSelected ? '700' : '';
     });
@@ -336,7 +337,7 @@ function jobBrandCell(id, current) {
     const brands = ['MoveAll','TBMI'];
     const opts = brands.map(b => `<option value="${b}" style="background:#111827;color:#fff;" ${b === current ? 'selected' : ''}>${b}</option>`).join('');
     const c = current ? (BRAND_COLORS[current] || { bg:'#6b7280', text:'#fff' }) : { bg:'#6b7280', text:'#fff' };
-    return `<select class="inline-select" style="background:${c.bg};color:${c.text};border:none;font-weight:800;font-size:0.78rem;border-radius:6px;padding:3px 8px;cursor:pointer"
+    return `<select class="inline-select" style="background:${c.bg};color:${c.text};border:none;font-weight:800;font-size:0.78rem;border-radius:6px;padding:3px 22px 3px 10px;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center;"
         onchange="inlineJobSave(${id},'brand',this.value);updateJobBrandColor(this)">
         <option value="" style="background:#111827;color:#fff;">— Select —</option>${opts}
     </select>`;
