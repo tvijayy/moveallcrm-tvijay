@@ -321,8 +321,8 @@ function jobPriceCell(id, current) {
         `<option value="${escapeHtml(p)}" style="background:#111827;color:#fff;" ${p === current ? 'selected' : ''}>${escapeHtml(p)}</option>`
     ).join('');
     const c = current ? (PRICE_COLORS[current] || { bg:'#6b7280', text:'#fff' }) : null;
-    const style = c ? `background:${c.bg};color:${c.text};border:none;font-weight:700;font-size:0.75rem;border-radius:6px;padding:3px 6px;cursor:pointer;max-width:180px`
-                    : `font-size:0.82rem;max-width:180px`;
+    const style = c ? `background:${c.bg};color:${c.text};border:none;font-weight:700;font-size:0.75rem;border-radius:6px;padding:3px 24px 3px 8px;cursor:pointer;max-width:180px;appearance:none;-webkit-appearance:none;min-width:140px;text-align:center;`
+                    : `font-size:0.82rem;max-width:180px;min-width:140px;padding:3px 24px 3px 8px;appearance:none;-webkit-appearance:none;`;
     return `<select class="inline-select" style="${style}" onchange="inlineJobSave(${id},'price_point',this.value);updateJobPriceColor(this)">
         <option value="" style="background:#111827;color:#fff;">— Select —</option>${opts}
     </select>`;
@@ -337,7 +337,7 @@ function jobBrandCell(id, current) {
     const brands = ['MoveAll','TBMI'];
     const opts = brands.map(b => `<option value="${b}" style="background:#111827;color:#fff;" ${b === current ? 'selected' : ''}>${b}</option>`).join('');
     const c = current ? (BRAND_COLORS[current] || { bg:'#6b7280', text:'#fff' }) : { bg:'#6b7280', text:'#fff' };
-    return `<select class="inline-select" style="background:${c.bg};color:${c.text};border:none;font-weight:800;font-size:0.78rem;border-radius:6px;padding:3px 22px 3px 10px;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center;"
+    return `<select class="inline-select" style="background:${c.bg};color:${c.text};border:none;font-weight:800;font-size:0.78rem;border-radius:6px;padding:3px 22px 3px 10px;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center;min-width:95px;width:max-content;"
         onchange="inlineJobSave(${id},'brand',this.value);updateJobBrandColor(this)">
         <option value="" style="background:#111827;color:#fff;">— Select —</option>${opts}
     </select>`;
