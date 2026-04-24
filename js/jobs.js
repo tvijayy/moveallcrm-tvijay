@@ -276,7 +276,7 @@ async function inlineJobSave(id, field, value) {
 function jobEditCell(id, field, value, maxW = '130px') {
     const display = value ? escapeHtml(String(value)) : '<span style="color:var(--text-muted);font-size:0.8rem">—</span>';
     const safeVal = escapeHtml(String(value || ''));
-    return `<span class="editable-cell" style="max-width:${maxW};display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;min-width:40px"
+    return `<span class="editable-cell" style="max-width:${maxW};display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;min-width:40px"
         title="${safeVal}" onclick="startJobInlineEdit(this,${id},'${field}','${safeVal}')">${display}</span>`;
 }
 
@@ -365,16 +365,16 @@ function openContractorDrop(e, jobId, triggerEl) {
     closeContractorDrop();
 
     const drop = document.createElement('div');
-    drop.style.cssText = `position:fixed;z-index:9999;background:var(--bg-primary,#fff);border:1px solid var(--border,#ddd);
-        border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.25);width:240px;overflow:hidden;`;
+    drop.style.cssText = `position:fixed;z-index:9999;background:var(--bg-surface,#111827);border:1px solid var(--border-color,#374151);
+        border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.5);width:240px;overflow:hidden;`;
 
     const currentVal = triggerEl.querySelector('span')?.textContent?.trim() || '';
     // Build HTML
     drop.innerHTML = `
         <div style="padding:8px">
             <input type="text" placeholder="Search..." id="ctr-search-${jobId}"
-                style="width:100%;padding:6px 10px;border-radius:6px;border:1.5px solid var(--border,#ddd);
-                    background:var(--bg-secondary,#f5f5f5);color:var(--text-primary,#111);font-size:0.85rem;box-sizing:border-box"
+                style="width:100%;padding:6px 10px;border-radius:6px;border:1.5px solid var(--border-color,#374151);
+                    background:var(--bg-base,#0B1121);color:var(--text-primary,#F9FAFB);font-size:0.85rem;box-sizing:border-box"
                 oninput="filterContractorDrop(this,${jobId})" onclick="event.stopPropagation()">
         </div>
         <div id="ctr-list-${jobId}" style="max-height:220px;overflow-y:auto;padding:4px 0">
@@ -411,7 +411,7 @@ function buildContractorDropList(jobId, currentVal, search) {
     // New TBC option
     const tbcMatch = !s || 'new tbc'.includes(s);
     if (tbcMatch) html += `<div onclick="selectContractorInline(${jobId},'New TBC',this)"
-        style="padding:8px 14px;cursor:pointer;font-size:0.88rem;color:#f59e0b;border-top:1px solid var(--border,#eee)"
+        style="padding:8px 14px;cursor:pointer;font-size:0.88rem;color:#f59e0b;border-top:1px solid var(--border-color,#374151)"
         onmouseenter="this.style.background='rgba(245,158,11,.08)'" onmouseleave="this.style.background='transparent'">
         ⚠ New TBC
     </div>`;
@@ -452,7 +452,7 @@ function renderMasterView(jobs) {
             <td style="min-width:160px">${jobPriceCell(j.id, j.price_point)}</td>
             <td>${jobBrandCell(j.id, j.brand)}</td>
             <td style="white-space:nowrap;color:var(--text-muted);font-size:0.82rem">${dateStr}</td>
-            <td style="min-width:120px">${jobEditCell(j.id,'notes',j.notes,'160px')}</td>
+            ${isAdmin() ? `<td style="min-width:120px">${jobEditCell(j.id,'notes',j.notes,'160px')}</td>` : ''}
             <td style="min-width:100px">${jobEditCell(j.id,'team',j.team,'120px')}</td>
             <td style="min-width:140px">${jobContractorCell(j.id, j.contractor)}</td>
             <td style="min-width:90px">${jobEditCell(j.id,'extras',j.extras,'110px')}</td>

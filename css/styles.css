@@ -206,6 +206,11 @@ select {
     cursor: pointer;
 }
 
+select option {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
 /* ---- Card ---- */
 .card {
     background: var(--bg-surface);
