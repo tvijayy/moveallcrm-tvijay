@@ -653,7 +653,7 @@ function renderLeadsTable(leads) {
         const safeEmail  = escapeJsAttr(l.email || '');
 
         return `<tr data-id="${l.id}">
-            <td style="min-width:130px">${editableCell(l.id,'customer_name',l.customer_name,'text','130px')}</td>
+            <td style="min-width:130px;position:sticky;left:0;z-index:10;background:var(--bg-surface);">${editableCell(l.id,'customer_name',l.customer_name,'text','130px')}</td>
             <td class="text-muted" style="font-size:0.78rem;white-space:nowrap">${l.updated_at ? timeAgo(l.updated_at) : '—'}</td>
             <td style="min-width:168px">${buildStatusSelect(l.id, l.status)}</td>
             <td style="min-width:155px">${buildCategorySelect(l.id, l.category)}</td>
