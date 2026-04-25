@@ -403,7 +403,7 @@
                     <button class="tab-btn" data-view="calendar">Calendar View</button>
                     <button class="tab-btn" data-view="archived">Archived Jobs</button>
                 </div>
-                <div class="card" style="padding:16px;box-shadow:var(--shadow-md);">
+                <div class="card" style="padding:16px;box-shadow:var(--shadow-md);max-width:100%;overflow:visible;">
                     <div class="filters-bar" style="flex-wrap:wrap;gap:8px;margin-bottom:16px;">
                         <div class="filter-group">
                             <label>Brand:</label>
@@ -448,17 +448,15 @@
                     </div>
 
                     <style>
-                    #jobs-master-view { overflow-x: auto; overflow-y: visible; min-height: 450px; padding-bottom: 60px; }
-                    #jobs-table th:first-child, #jobs-table td:first-child { position: sticky; left: 0; z-index: 2; background-color: var(--bg-surface); border-right: 1px solid var(--border-color); }
-                    #jobs-table th:first-child { z-index: 3; }
+                    #jobs-master-view { overflow-x: auto !important; overflow-y: visible !important; min-height: 450px; padding-bottom: 60px; width: 100%; display: block; }
                     </style>
 
                     <!-- Master / Archived table -->
                     <div class="table-container table-scroll" id="jobs-master-view">
-                        <table class="data-table" id="jobs-table">
+                        <table class="data-table" id="jobs-table" style="width:100%;">
                         <thead>
                             <tr>
-                                <th>Client</th>
+                                <th style="position:sticky;left:0;z-index:11;background:var(--bg-elevated);border-right:1px solid var(--border-color);">Client</th>
                                 <th>Price Point</th>
                                 <th>Brand</th>
                                 <th>Date</th>

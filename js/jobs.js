@@ -155,8 +155,30 @@ async function loadJobsData() {
     else if (currentJobsView === 'past') params.view = 'past';
     else if (currentJobsView === 'archived') params.view = 'archived';
 
+    try {
+        const brandGroup = document.getElementById('jobs-brand-filter')?.closest('.filter-group');
+        const priceGroup = document.getElementById('jobs-price-filter')?.closest('.filter-group');
+        const statusGroup = document.getElementById('jobs-status-filter')?.closest('.filter-group');
+        const contractorFilter = document.getElementById('jobs-contractor-filter');
+        const contractorLabel = contractorFilter?.parentElement.querySelector('label');
+
+        if (currentJobsView === 'team') {
+            if (brandGroup) brandGroup.style.display = 'none';
+            if (priceGroup) priceGroup.style.display = 'none';
+            if (statusGroup) statusGroup.style.display = 'none';
+            if (contractorLabel) contractorLabel.textContent = 'Filter by team:';
+        } else {
+            if (brandGroup) brandGroup.style.display = '';
+            if (priceGroup) priceGroup.style.display = '';
+            if (contractorLabel) contractorLabel.textContent = 'Contractor:';
+            if (statusGroup) {
+                statusGroup.style.display = currentJobsView === 'archived' ? 'none' : '';
+            }
+        }
+    } catch(e) {}
+
     const statusFilter = document.getElementById('jobs-status-filter')?.value;
-    if (statusFilter && statusFilter !== 'all') params.status = statusFilter;
+    if (statusFilter && statusFilter !== 'all' && currentJobsView !== 'team') params.status = statusFilter;
 
     const brandFilter = document.getElementById('jobs-brand-filter')?.value;
     const priceFilter = document.getElementById('jobs-price-filter')?.value;
@@ -525,7 +547,7 @@ function renderMasterView(jobs) {
             day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
         }) : '—';
         return `<tr data-id="${j.id}">
-            <td style="font-weight:600;white-space:nowrap;min-width:140px">${jobEditCell(j.id,'first_name',j.first_name,'160px')}</td>
+            <td style="font-weight:600;white-space:nowrap;min-width:140px;position:sticky;left:0;z-index:10;background:var(--bg-surface);border-right:1px solid var(--border-color);">${jobEditCell(j.id,'first_name',j.first_name,'160px')}</td>
             <td style="min-width:160px">${jobPriceCell(j.id, j.price_point)}</td>
             <td>${jobBrandCell(j.id, j.brand)}</td>
             <td style="white-space:nowrap;color:var(--text-muted);font-size:0.82rem">${dateStr}</td>
@@ -718,27 +740,21 @@ document.addEventListener('DOMContentLoaded', () => {
             currentJobsPage = 1;
 
             const filter = document.getElementById('jobs-status-filter');
-            const filterGroup = filter?.closest('.filter-group');
             if (filter) {
                 if (currentJobsView === 'upcoming' || currentJobsView === 'team') {
                     filter.innerHTML = `<option value="all">All Status</option>
                                       <option value="scheduled">Scheduled</option>
                                       <option value="in_progress">In Progress</option>`;
-                    if (filterGroup) filterGroup.classList.remove('hidden');
                 } else if (currentJobsView === 'past') {
                     filter.innerHTML = `<option value="all">All Status</option>
                                       <option value="completed">Completed</option>
                                       <option value="cancelled">Cancelled</option>`;
-                    if (filterGroup) filterGroup.classList.remove('hidden');
-                } else if (currentJobsView === 'archived') {
-                    if (filterGroup) filterGroup.classList.add('hidden');
-                } else {
+                } else if (currentJobsView !== 'archived') {
                     filter.innerHTML = `<option value="all">All Status</option>
                                       <option value="scheduled">Scheduled</option>
                                       <option value="in_progress">In Progress</option>
                                       <option value="completed">Completed</option>
                                       <option value="cancelled">Cancelled</option>`;
-                    if (filterGroup) filterGroup.classList.remove('hidden');
                 }
                 filter.value = 'all';
             }
