@@ -562,6 +562,12 @@ function renderMasterView(jobs) {
             <td style="min-width:90px">${jobEditCell(j.id,'phone',j.phone,'100px')}</td>
             <td><span class="sms-badge sms-${j.on_way_sms}">${j.on_way_sms === 'sent' ? '✓ Sent' : '✗ Not Sent'}</span></td>
             <td><span class="sms-badge sms-${j.last_sms}">${j.last_sms === 'sent' ? '✓ Sent' : '✗ Not Sent'}</span></td>
+            <td style="min-width:100px">${escapeHtml(j.time_sheet || '—')}</td>
+            <td style="min-width:90px">$${parseFloat(j.sell_price || 0).toFixed(0)}</td>
+            <td style="min-width:90px">$${parseFloat(j.buy_price || 0).toFixed(0)}</td>
+            <td style="min-width:90px;font-weight:bold" class="${((parseFloat(j.sell_price)||0) - (parseFloat(j.buy_price)||0)) >= 0 ? 'text-success' : 'text-danger'}">
+                $${((parseFloat(j.sell_price)||0) - (parseFloat(j.buy_price)||0)).toFixed(0)}
+            </td>
             <td class="actions-cell" style="white-space:nowrap; position:relative;">
                 <button class="btn btn-sm btn-ghost" onclick="toggleJobMenu(${j.id}, event)" style="font-size:1.2rem;padding:4px 8px;">⋮</button>
                 <div id="job-menu-${j.id}" class="job-action-menu hidden" style="position:absolute;right:10px;top:100%;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:6px;z-index:99;display:flex;flex-direction:column;min-width:160px;box-shadow:var(--shadow-md);">
@@ -815,6 +821,11 @@ async function editJob(id) {
         setJobVal('job-brand', j.brand);
         setJobVal('job-price-point', j.price_point);
         setJobVal('job-notes', j.notes);
+        setJobVal('job-sell-price', j.sell_price);
+        setJobVal('job-buy-price', j.buy_price);
+        if (j.sell_price !== undefined && j.buy_price !== undefined) {
+            setJobVal('job-margin', ((parseFloat(j.sell_price)||0) - (parseFloat(j.buy_price)||0)).toFixed(2));
+        }
         populateContractorDropdown();
         // Set contractor after dropdown is populated
         setTimeout(() => setJobVal('job-contractor', j.contractor), 50);
@@ -863,6 +874,8 @@ async function saveJob(e) {
         brand: getJobVal('job-brand') || null,
         price_point: getJobVal('job-price-point') || null,
         notes: getJobVal('job-notes') || null,
+        sell_price: parseFloat(getJobVal('job-sell-price')) || null,
+        buy_price: parseFloat(getJobVal('job-buy-price')) || null,
     };
 
     try {
