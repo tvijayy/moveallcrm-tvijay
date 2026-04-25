@@ -185,7 +185,7 @@ function closeStorageCtxMenu() {
 function showStorageMenu(btn, id, comments) {
     closeStorageCtxMenu();
     const menu = document.createElement('div');
-    menu.className = 'job-ctx-menu'; // reuse existing menu styles
+    menu.className = 'lead-ctx-menu'; // reuse existing menu styles
     const safeComments = escapeJsAttr(comments || '');
     menu.innerHTML = `
         <div class="ctx-item" onclick="editStorage(${id});closeStorageCtxMenu()">✏️ Edit</div>
