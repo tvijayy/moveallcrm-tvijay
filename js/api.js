@@ -133,8 +133,6 @@ const api = {
                 else if (view === 'past') qs += `&status=in.(completed,cancelled)`;
                 else if (view === 'archived') qs += `&status=eq.archived`;
             }
-            if (view === 'upcoming') qs += `&or=(move_date.gte.${today},move_date.is.null)`;
-            else if (view === 'past') qs += `&move_date=lt.${today}`;
             qs += '&order=move_date.desc';
         }
         if (entity_type) qs += `&entity_type=eq.${entity_type}`;
