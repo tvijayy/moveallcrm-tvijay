@@ -525,6 +525,7 @@
                                 <th>Sell Price</th>
                                 <th>Buy Price</th>
                                 <th>Margin</th>
+                                <th>Comments</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -1116,6 +1117,29 @@
                     <button type="submit" class="btn btn-primary">Save Storage Plan</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Storage Comment Modal -->
+    <div class="modal-overlay hidden" id="storage-comment-modal">
+        <div class="modal" style="max-width:500px">
+            <div class="modal-header">
+                <h2>Storage Comment</h2>
+                <button class="btn btn-ghost" onclick="closeModal('storage-comment-modal')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div style="padding:24px">
+                <input type="hidden" id="storage-comment-id">
+                <div class="form-group">
+                    <label for="storage-public-comment">Comment</label>
+                    <textarea id="storage-public-comment" rows="4" placeholder="Enter comment for this storage plan..."></textarea>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px">
+                    <button class="btn btn-secondary" onclick="closeModal('storage-comment-modal')">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveStorageComment()">Save Comment</button>
+                </div>
+            </div>
         </div>
     </div>
 

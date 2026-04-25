@@ -70,8 +70,9 @@ function renderStorageTable(entries) {
             <td class="text-success">$${sell.toFixed(2)}</td>
             <td class="text-danger">$${buy.toFixed(2)}</td>
             <td class="${margin >= 0 ? 'text-success' : 'text-danger'}">$${margin.toFixed(2)}</td>
+            <td style="max-width:180px;white-space:normal;font-size:0.75rem;color:var(--text-secondary);">${escapeHtml(s.comments || '—')}</td>
             <td>
-                <button class="ctx-dots-btn" onclick="event.stopPropagation();showStorageMenu(this,${s.id})">⋮</button>
+                <button class="ctx-dots-btn" onclick="event.stopPropagation();showStorageMenu(this,${s.id},'${escapeJsAttr(s.comments || '')}')">⋮</button>
             </td>
         </tr>`;
     }).join('');
@@ -181,12 +182,15 @@ let activeStorageCtxMenu = null;
 function closeStorageCtxMenu() {
     if (activeStorageCtxMenu) { activeStorageCtxMenu.remove(); activeStorageCtxMenu = null; }
 }
-function showStorageMenu(btn, id) {
+function showStorageMenu(btn, id, comments) {
     closeStorageCtxMenu();
     const menu = document.createElement('div');
     menu.className = 'job-ctx-menu'; // reuse existing menu styles
+    const safeComments = escapeJsAttr(comments || '');
     menu.innerHTML = `
         <div class="ctx-item" onclick="editStorage(${id});closeStorageCtxMenu()">✏️ Edit</div>
+        <div class="ctx-divider"></div>
+        <div class="ctx-item" onclick="openStorageComment(${id}, '${safeComments}');closeStorageCtxMenu()">💬 Comment</div>
         <div class="ctx-divider"></div>
         <div class="ctx-item" onclick="archiveStorage(${id});closeStorageCtxMenu()">📦 Move to Archive</div>
         <div class="ctx-divider"></div>
@@ -198,4 +202,30 @@ function showStorageMenu(btn, id) {
     document.body.appendChild(menu);
     activeStorageCtxMenu = menu;
     setTimeout(() => document.addEventListener('click', closeStorageCtxMenu, { once: true }), 50);
+}
+
+function openStorageComment(id, currentComment) {
+    document.getElementById('storage-comment-id').value = id;
+    document.getElementById('storage-public-comment').value = currentComment || '';
+    openModal('storage-comment-modal');
+}
+
+async function saveStorageComment() {
+    const id = document.getElementById('storage-comment-id').value;
+    const comment = document.getElementById('storage-public-comment').value.trim();
+    
+    if (!id) return;
+    
+    try {
+        const res = await api.put(\`/storage/\${id}\`, { comments: comment });
+        if (res.success) {
+            showToast('Success', 'Comment saved', 'success');
+            closeModal('storage-comment-modal');
+            loadStorageData();
+        } else {
+            showToast('Error', res.error || 'Failed to save comment', 'error');
+        }
+    } catch (err) {
+        showToast('Error', 'Network error', 'error');
+    }
 }
