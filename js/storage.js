@@ -192,8 +192,7 @@ function showStorageMenu(btn, id, comments) {
         <div class="ctx-divider"></div>
         <div class="ctx-item" onclick="openStorageComment(${id}, '${safeComments}');closeStorageCtxMenu()">💬 Comment</div>
         <div class="ctx-divider"></div>
-        <div class="ctx-item" onclick="archiveStorage(${id});closeStorageCtxMenu()">📦 Move to Archive</div>
-        <div class="ctx-divider"></div>
+        ${currentStorageTab !== 'archived' ? `<div class="ctx-item" onclick="archiveStorage(${id});closeStorageCtxMenu()">📦 Move to Archive</div><div class="ctx-divider"></div>` : ''}
         <div class="ctx-item ctx-item-danger" onclick="deleteStorage(${id});closeStorageCtxMenu()">🗑️ Delete</div>
     `;
     const rect = btn.getBoundingClientRect();
