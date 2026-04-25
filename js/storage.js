@@ -197,8 +197,8 @@ function showStorageMenu(btn, id, comments) {
         <div class="ctx-item ctx-item-danger" onclick="deleteStorage(${id});closeStorageCtxMenu()">🗑️ Delete</div>
     `;
     const rect = btn.getBoundingClientRect();
-    menu.style.top  = \`\${rect.bottom + window.scrollY + 4}px\`;
-    menu.style.left = \`\${rect.left + window.scrollX - 120}px\`;
+    menu.style.top  = `${rect.bottom + window.scrollY + 4}px`;
+    menu.style.left = `${rect.left + window.scrollX - 120}px`;
     document.body.appendChild(menu);
     activeStorageCtxMenu = menu;
     setTimeout(() => document.addEventListener('click', closeStorageCtxMenu, { once: true }), 50);
@@ -217,7 +217,7 @@ async function saveStorageComment() {
     if (!id) return;
     
     try {
-        const res = await api.put(\`/storage/\${id}\`, { comments: comment });
+        const res = await api.put(`/storage/${id}`, { comments: comment });
         if (res.success) {
             showToast('Success', 'Comment saved', 'success');
             closeModal('storage-comment-modal');
