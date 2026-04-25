@@ -404,7 +404,7 @@
                     <button class="tab-btn" data-view="archived">Archived Jobs</button>
                 </div>
                 <div class="card" style="padding:16px;box-shadow:var(--shadow-md);max-width:100%;overflow:visible;">
-                    <div class="filters-bar" style="flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+                    <div class="filters-bar" style="flex-wrap:wrap;gap:20px;justify-content:flex-start;margin-bottom:16px;">
                         <div class="filter-group">
                             <label>Brand:</label>
                             <select id="jobs-brand-filter" class="filter-select">
@@ -444,15 +444,13 @@
                                 <option value="cancelled">Cancelled</option>
                             </select>
                         </div>
-                        <div class="results-count"><span id="jobs-count">0</span> jobs</div>
+                        <div class="results-count" style="margin-left:auto;padding-right:10px;"><span id="jobs-count">0</span> jobs</div>
                     </div>
 
                     <style>
                     #jobs-master-view { overflow-x: auto !important; overflow-y: visible !important; min-height: 450px; padding-bottom: 60px; width: 100%; display: block; }
                     #jobs-table { border-collapse: separate !important; border-spacing: 0 !important; }
-                    #jobs-table th { border-bottom: 1px solid var(--border-color); }
-                    #jobs-table td { border-bottom: 1px solid var(--border-color); }
-                    #jobs-table th:first-child, #jobs-table td:first-child { border-right: 1px solid var(--border-color); }
+                    #jobs-table th, #jobs-table td { border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); }
                     </style>
 
                     <!-- Master / Archived table -->
