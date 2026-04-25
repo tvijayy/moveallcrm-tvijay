@@ -399,55 +399,63 @@
                 <div class="tabs-bar" id="jobs-tabs">
                     <button class="tab-btn active" data-view="upcoming">Master View – Upcoming</button>
                     <button class="tab-btn" data-view="past">Master View – Past</button>
+                    <button class="tab-btn" data-view="team">Team View</button>
                     <button class="tab-btn" data-view="calendar">Calendar View</button>
                     <button class="tab-btn" data-view="archived">Archived Jobs</button>
                 </div>
-                <div class="filters-bar" style="flex-wrap:wrap;gap:8px">
-                    <div class="filter-group">
-                        <label>Brand:</label>
-                        <select id="jobs-brand-filter" class="filter-select">
-                            <option value="all">All Brands</option>
-                            <option value="MoveAll">MoveAll</option>
-                            <option value="TBMI">TBMI</option>
-                        </select>
+                <div class="card" style="padding:16px;box-shadow:var(--shadow-md);">
+                    <div class="filters-bar" style="flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+                        <div class="filter-group">
+                            <label>Brand:</label>
+                            <select id="jobs-brand-filter" class="filter-select">
+                                <option value="all">All Brands</option>
+                                <option value="MoveAll">MoveAll</option>
+                                <option value="TBMI">TBMI</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Price Point:</label>
+                            <select id="jobs-price-filter" class="filter-select">
+                                <option value="all">All Prices</option>
+                                <option value="$199ph (2M+T Eco)">$199ph (2M+T Eco)</option>
+                                <option value="$220ph (2M+T Prem)">$220ph (2M+T Prem)</option>
+                                <option value="$270ph (3M+T Eco)">$270ph (3M+T Eco)</option>
+                                <option value="$299ph (3M+T Prem)">$299ph (3M+T Prem)</option>
+                                <option value="$154ph (Butler Rates)">$154ph (Butler Rates)</option>
+                                <option value="$159.50ph (Styling Rates)">$159.50ph (Styling Rates)</option>
+                                <option value="Interstate Fixed Price">Interstate Fixed Price</option>
+                                <option value="$225.50ph (3M Butler Rates)">$225.50ph (3M Butler Rates)</option>
+                                <option value="$264ph (3M + 2 Truck Butler Rate)">$264ph (3M + 2 Truck Butler Rate)</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Contractor:</label>
+                            <select id="jobs-contractor-filter" class="filter-select">
+                                <option value="all">All Contractors</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Status:</label>
+                            <select id="jobs-status-filter" class="filter-select">
+                                <option value="all">All Status</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="results-count"><span id="jobs-count">0</span> jobs</div>
                     </div>
-                    <div class="filter-group">
-                        <label>Price Point:</label>
-                        <select id="jobs-price-filter" class="filter-select">
-                            <option value="all">All Prices</option>
-                            <option value="$199ph (2M+T Eco)">$199ph (2M+T Eco)</option>
-                            <option value="$220ph (2M+T Prem)">$220ph (2M+T Prem)</option>
-                            <option value="$270ph (3M+T Eco)">$270ph (3M+T Eco)</option>
-                            <option value="$299ph (3M+T Prem)">$299ph (3M+T Prem)</option>
-                            <option value="$154ph (Butler Rates)">$154ph (Butler Rates)</option>
-                            <option value="$159.50ph (Styling Rates)">$159.50ph (Styling Rates)</option>
-                            <option value="Interstate Fixed Price">Interstate Fixed Price</option>
-                            <option value="$225.50ph (3M Butler Rates)">$225.50ph (3M Butler Rates)</option>
-                            <option value="$264ph (3M + 2 Truck Butler Rate)">$264ph (3M + 2 Truck Butler Rate)</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Contractor:</label>
-                        <select id="jobs-contractor-filter" class="filter-select">
-                            <option value="all">All Contractors</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Status:</label>
-                        <select id="jobs-status-filter" class="filter-select">
-                            <option value="all">All Status</option>
-                            <option value="scheduled">Scheduled</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </div>
-                    <div class="results-count"><span id="jobs-count">0</span> jobs</div>
-                </div>
 
-                <!-- Master / Archived table -->
-                <div class="table-container table-scroll" id="jobs-master-view">
-                    <table class="data-table" id="jobs-table">
+                    <style>
+                    #jobs-master-view { overflow-x: auto; overflow-y: visible; min-height: 450px; padding-bottom: 60px; }
+                    #jobs-table th:first-child, #jobs-table td:first-child { position: sticky; left: 0; z-index: 2; background-color: var(--bg-surface); border-right: 1px solid var(--border-color); }
+                    #jobs-table th:first-child { z-index: 3; }
+                    </style>
+
+                    <!-- Master / Archived table -->
+                    <div class="table-container table-scroll" id="jobs-master-view">
+                        <table class="data-table" id="jobs-table">
                         <thead>
                             <tr>
                                 <th>Client</th>
@@ -457,6 +465,7 @@
                                 <th class="col-private-notes">Private Notes</th>
                                 <th>Team</th>
                                 <th>Assign Contractor</th>
+                                <th>Invoice</th>
                                 <th>Extras</th>
                                 <th>Deposit</th>
                                 <th>Move Out</th>
@@ -474,6 +483,7 @@
                         <h3>No jobs found</h3>
                         <p>Add a new job to get started</p>
                     </div>
+                </div>
                 </div>
 
                 <!-- Calendar View -->
@@ -641,7 +651,29 @@
     <!-- MODALS                                       -->
     <!-- ============================================ -->
 
-    <!-- Lead Modal -->
+    <div class="modal-overlay hidden" id="job-comment-modal">
+        <div class="modal" style="max-width:500px">
+            <div class="modal-header">
+                <h2>Public Comment</h2>
+                <button class="btn btn-ghost" onclick="closeModal('job-comment-modal')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div style="padding:24px">
+                <input type="hidden" id="job-comment-id">
+                <div class="form-group">
+                    <label for="job-public-comment">Comment</label>
+                    <textarea id="job-public-comment" rows="4" placeholder="Enter public comment here..."></textarea>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px">
+                    <button class="btn btn-secondary" onclick="closeModal('job-comment-modal')">Cancel</button>
+                    <button class="btn btn-primary" onclick="savePublicComment()">Save Comment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Add Lead Modal -->
     <div class="modal-overlay hidden" id="lead-modal">
         <div class="modal modal-lg" style="max-width:680px">
             <div class="modal-header">

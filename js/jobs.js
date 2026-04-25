@@ -151,7 +151,7 @@ function jobGoBack() {
 
 async function loadJobsData() {
     const params = { limit: 200 };
-    if (currentJobsView === 'upcoming') params.view = 'upcoming';
+    if (currentJobsView === 'upcoming' || currentJobsView === 'team') params.view = 'upcoming';
     else if (currentJobsView === 'past') params.view = 'past';
     else if (currentJobsView === 'archived') params.view = 'archived';
 
@@ -350,6 +350,79 @@ function updateJobBrandColor(sel) {
     sel.style.background = c.bg; sel.style.color = c.text;
 }
 
+const INVOICE_OPTIONS = [
+    { label: 'Done', color: '#10b981' },
+    { label: 'Waiting Times', color: '#f59e0b' },
+    { label: 'Afterpay Required', color: '#8b5cf6' },
+    { label: 'Paid inAdvance (Interstate)', color: '#3b82f6' },
+    { label: 'Add storage Costs', color: '#ef4444' },
+    { label: 'Times In', color: '#6366f1' },
+    { label: 'Invoiced in Advance (Interstate)', color: '#ec4899' },
+    { label: 'Discount Required', color: '#f97316' },
+    { label: 'To Do', color: '#6b7280' }
+];
+
+function jobInvoiceCell(id, current) {
+    const opts = INVOICE_OPTIONS.map(o => 
+        `<option value="${o.label}" style="background:#111827;color:#fff;" ${o.label === current ? 'selected' : ''}>${o.label}</option>`
+    ).join('');
+    const c = INVOICE_OPTIONS.find(o => o.label === current) || { color: '#6b7280' };
+    return `<select class="inline-select" style="background:${c.color};color:#fff;border:none;font-weight:700;font-size:0.75rem;border-radius:6px;padding:3px 22px 3px 10px;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center;min-width:110px;width:max-content;"
+        onchange="inlineInvoiceSave(${id}, this.value)">
+        <option value="" style="background:#111827;color:#fff;">— Invoice —</option>${opts}
+    </select>`;
+}
+
+async function inlineInvoiceSave(id, value) {
+    if (value === 'Done') {
+        await api.put(`/jobs/${id}`, { invoice: value, status: 'completed' });
+        showToast('Job Completed', 'Job moved to Past Jobs', 'success');
+        loadJobsData();
+    } else {
+        await inlineJobSave(id, 'invoice', value);
+    }
+}
+
+function toggleJobMenu(id, e) {
+    e.stopPropagation();
+    document.querySelectorAll('.job-action-menu').forEach(el => {
+        if (el.id !== `job-menu-${id}`) el.classList.add('hidden');
+    });
+    const menu = document.getElementById(`job-menu-${id}`);
+    if (menu) menu.classList.toggle('hidden');
+}
+document.addEventListener('click', () => {
+    document.querySelectorAll('.job-action-menu').forEach(el => el.classList.add('hidden'));
+});
+
+async function openPublicComment(id) {
+    document.getElementById('job-comment-id').value = id;
+    const job = allJobsCache.find(j => j.id === id);
+    document.getElementById('job-public-comment').value = job?.public_comment || '';
+    openModal('job-comment-modal');
+}
+async function savePublicComment() {
+    const id = document.getElementById('job-comment-id').value;
+    const comment = document.getElementById('job-public-comment').value;
+    const res = await api.put(`/jobs/${id}`, { public_comment: comment });
+    if (res.success) {
+        showToast('Saved', 'Public comment saved', 'success');
+        closeModal('job-comment-modal');
+        loadJobsData();
+    } else {
+        showToast('Error', res.error || 'Failed to save', 'error');
+    }
+}
+async function markJobCompleted(id) {
+    const res = await api.put(`/jobs/${id}`, { status: 'completed' });
+    if (res.success) {
+        showToast('Success', 'Job marked as completed', 'success');
+        loadJobsData();
+    } else {
+        showToast('Error', res.error || 'Failed to complete job', 'error');
+    }
+}
+
 // ─── Searchable contractor dropdown ──────────────────────────────────────────
 let _activeContractorDrop = null;
 
@@ -459,6 +532,7 @@ function renderMasterView(jobs) {
             ${isAdmin() ? `<td style="min-width:120px">${jobEditCell(j.id,'notes',j.notes,'160px')}</td>` : ''}
             <td style="min-width:100px">${jobEditCell(j.id,'team',j.team,'120px')}</td>
             <td style="min-width:140px">${jobContractorCell(j.id, j.contractor)}</td>
+            <td style="min-width:120px">${jobInvoiceCell(j.id, j.invoice)}</td>
             <td style="min-width:90px">${jobEditCell(j.id,'extras',j.extras,'110px')}</td>
             <td style="min-width:70px">${jobEditCell(j.id,'deposit',j.deposit,'70px')}</td>
             <td style="min-width:120px">${jobEditCell(j.id,'move_out',j.move_out,'150px')}</td>
@@ -466,10 +540,15 @@ function renderMasterView(jobs) {
             <td style="min-width:90px">${jobEditCell(j.id,'phone',j.phone,'100px')}</td>
             <td><span class="sms-badge sms-${j.on_way_sms}">${j.on_way_sms === 'sent' ? '✓ Sent' : '✗ Not Sent'}</span></td>
             <td><span class="sms-badge sms-${j.last_sms}">${j.last_sms === 'sent' ? '✓ Sent' : '✗ Not Sent'}</span></td>
-            <td class="actions-cell" style="white-space:nowrap">
-                <button class="btn btn-sm btn-outline" onclick="editJob(${j.id})">Edit</button>
-                ${currentJobsView !== 'archived' ? `<button class="btn btn-sm btn-ghost" onclick="archiveJob(${j.id})">Archive</button>` : ''}
-                <button class="btn btn-sm btn-danger" onclick="deleteJob(${j.id})">Delete</button>
+            <td class="actions-cell" style="white-space:nowrap; position:relative;">
+                <button class="btn btn-sm btn-ghost" onclick="toggleJobMenu(${j.id}, event)" style="font-size:1.2rem;padding:4px 8px;">⋮</button>
+                <div id="job-menu-${j.id}" class="job-action-menu hidden" style="position:absolute;right:10px;top:100%;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:6px;z-index:99;display:flex;flex-direction:column;min-width:160px;box-shadow:var(--shadow-md);">
+                    <button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="editJob(${j.id})">Edit Job</button>
+                    ${currentJobsView !== 'archived' ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="archiveJob(${j.id})">Archive Job</button>` : ''}
+                    <button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="openPublicComment(${j.id})">Public Comment</button>
+                    <button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="markJobCompleted(${j.id})">Mark as Completed</button>
+                    <button class="btn btn-ghost text-danger" style="justify-content:flex-start;border-radius:0;padding:10px 16px;color:var(--danger);" onclick="deleteJob(${j.id})">Delete Job</button>
+                </div>
             </td>
         </tr>`;
     }).join('');
@@ -641,7 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filter = document.getElementById('jobs-status-filter');
             const filterGroup = filter?.closest('.filter-group');
             if (filter) {
-                if (currentJobsView === 'upcoming') {
+                if (currentJobsView === 'upcoming' || currentJobsView === 'team') {
                     filter.innerHTML = `<option value="all">All Status</option>
                                       <option value="scheduled">Scheduled</option>
                                       <option value="in_progress">In Progress</option>`;
