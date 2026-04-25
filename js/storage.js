@@ -57,7 +57,7 @@ function renderStorageTable(entries) {
         const margin = sell - buy;
         return `
         <tr data-id="${s.id}">
-            <td>${escapeHtml(s.storage_location || '—')}</td>
+            <td style="position:sticky;left:0;z-index:10;background:var(--bg-surface);min-width:140px;">${escapeHtml(s.storage_location || '—')}</td>
             <td>${s.move_in_date ? formatDate(s.move_in_date) : '—'}</td>
             <td>${escapeHtml(s.unit_numbers || '—')}</td>
             <td>${escapeHtml(s.padlock_code || '—')}</td>
@@ -70,9 +70,8 @@ function renderStorageTable(entries) {
             <td class="text-success">$${sell.toFixed(2)}</td>
             <td class="text-danger">$${buy.toFixed(2)}</td>
             <td class="${margin >= 0 ? 'text-success' : 'text-danger'}">$${margin.toFixed(2)}</td>
-            <td class="actions-cell">
-                <button class="btn btn-sm btn-outline" onclick="editStorage(${s.id})">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteStorage(${s.id})">Delete</button>
+            <td>
+                <button class="ctx-dots-btn" onclick="event.stopPropagation();showStorageMenu(this,${s.id})">⋮</button>
             </td>
         </tr>`;
     }).join('');
@@ -165,4 +164,38 @@ async function deleteStorage(id) {
     } catch (err) {
         showToast('Error', 'Failed to delete', 'error');
     }
+}
+
+async function archiveStorage(id) {
+    if (!confirm('Move this storage plan to archive?')) return;
+    try {
+        const res = await api.put(`/storage/${id}`, { status: 'archived' });
+        if (res.success) { showToast('Archived', 'Storage plan archived', 'success'); loadStorageData(); }
+        else showToast('Error', res.error || 'Archive failed', 'error');
+    } catch (err) {
+        showToast('Error', 'Failed to archive', 'error');
+    }
+}
+
+let activeStorageCtxMenu = null;
+function closeStorageCtxMenu() {
+    if (activeStorageCtxMenu) { activeStorageCtxMenu.remove(); activeStorageCtxMenu = null; }
+}
+function showStorageMenu(btn, id) {
+    closeStorageCtxMenu();
+    const menu = document.createElement('div');
+    menu.className = 'job-ctx-menu'; // reuse existing menu styles
+    menu.innerHTML = `
+        <div class="ctx-item" onclick="editStorage(${id});closeStorageCtxMenu()">✏️ Edit</div>
+        <div class="ctx-divider"></div>
+        <div class="ctx-item" onclick="archiveStorage(${id});closeStorageCtxMenu()">📦 Move to Archive</div>
+        <div class="ctx-divider"></div>
+        <div class="ctx-item ctx-item-danger" onclick="deleteStorage(${id});closeStorageCtxMenu()">🗑️ Delete</div>
+    `;
+    const rect = btn.getBoundingClientRect();
+    menu.style.top  = \`\${rect.bottom + window.scrollY + 4}px\`;
+    menu.style.left = \`\${rect.left + window.scrollX - 120}px\`;
+    document.body.appendChild(menu);
+    activeStorageCtxMenu = menu;
+    setTimeout(() => document.addEventListener('click', closeStorageCtxMenu, { once: true }), 50);
 }
