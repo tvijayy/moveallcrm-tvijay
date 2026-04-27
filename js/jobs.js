@@ -568,6 +568,7 @@ function renderMasterView(jobs) {
             <td style="min-width:90px;font-weight:bold" class="${((parseFloat(j.sell_price)||0) - (parseFloat(j.buy_price)||0)) >= 0 ? 'text-success' : 'text-danger'}">
                 $${((parseFloat(j.sell_price)||0) - (parseFloat(j.buy_price)||0)).toFixed(0)}
             </td>
+            <td style="max-width:180px;white-space:normal;font-size:0.75rem;color:var(--text-secondary);">${escapeHtml(j.public_comment || '—')}</td>
             <td class="actions-cell" style="white-space:nowrap; position:relative;">
                 <button class="btn btn-sm btn-ghost" onclick="toggleJobMenu(${j.id}, event)" style="font-size:1.2rem;padding:4px 8px;">⋮</button>
                 <div id="job-menu-${j.id}" class="job-action-menu hidden" style="position:absolute;right:10px;top:100%;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:6px;z-index:99;display:flex;flex-direction:column;min-width:160px;box-shadow:var(--shadow-md);">
