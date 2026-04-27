@@ -521,7 +521,6 @@
                                 <th>Unit Numbers</th>
                                 <th>Padlock Code</th>
                                 <th>Client Name</th>
-                                <th>Mobile Number</th>
                                 <th>Emails</th>
                                 <th>Phone Numbers</th>
                                 <th>Repeated Invoice</th>
@@ -1101,20 +1100,28 @@
                 <div class="form-row">
                     <div class="form-group"><label for="storage-padlock-code">Padlock Code</label><input type="text"
                             id="storage-padlock-code"></div>
-                    <div class="form-group"><label for="storage-mobile">Mobile Number</label><input type="tel"
-                            id="storage-mobile"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label for="storage-email">Emails</label><input type="email"
-                            id="storage-email"></div>
                     <div class="form-group"><label for="storage-phone">Phone Numbers</label><input type="tel"
                             id="storage-phone"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label for="storage-repeated-invoice">Repeated Invoice</label><input
-                            type="text" id="storage-repeated-invoice" placeholder="e.g. Monthly"></div>
-                    <div class="form-group"><label for="storage-stripe">Stripe Subscription</label><input type="text"
-                            id="storage-stripe" placeholder="sub_xxxxx"></div>
+                    <div class="form-group"><label for="storage-email">Emails</label><input type="email"
+                            id="storage-email" style="width: 100%;"></div>
+                </div>
+                <div class="form-group">
+                    <label>Repeating Invoice Set Up? *</label>
+                    <input type="hidden" id="storage-repeated-invoice">
+                    <div class="btn-group-grid" id="storage-invoice-group" style="grid-template-columns: 1fr;">
+                        <button type="button" class="btn-group-opt" data-value="Done">Done</button>
+                        <button type="button" class="btn-group-opt" data-value="To Do">To Do</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Stripe Subscription Set Up *</label>
+                    <input type="hidden" id="storage-stripe">
+                    <div class="btn-group-grid" id="storage-stripe-group" style="grid-template-columns: 1fr;">
+                        <button type="button" class="btn-group-opt" data-value="Done">Done</button>
+                        <button type="button" class="btn-group-opt" data-value="To Do">To Do</button>
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group"><label for="storage-sell-price">Sell Price</label><input type="number"

@@ -157,9 +157,14 @@ function openCreateModal(id) {
     };
     const titleEl = document.querySelector(`#${id} .modal-header h2`);
     if (titleEl && titleMap[id]) titleEl.textContent = titleMap[id];
-    // Clear hidden id
-    const hiddenId = document.querySelector(`#${id} input[type="hidden"]`);
-    if (hiddenId) hiddenId.value = '';
+    
+    // Clear hidden id and all other hidden inputs used by button groups
+    const modalEl = document.getElementById(id);
+    if (modalEl) {
+        modalEl.querySelectorAll('input[type="hidden"]').forEach(inp => inp.value = '');
+        modalEl.querySelectorAll('.btn-group-opt').forEach(btn => btn.classList.remove('selected'));
+    }
+    
     // Hide lead actions panel for new leads
     if (id === 'lead-modal') {
         const actionsPanel = document.getElementById('lead-actions-panel');

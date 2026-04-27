@@ -62,7 +62,6 @@ function renderStorageTable(entries) {
             <td>${escapeHtml(s.unit_numbers || '—')}</td>
             <td>${escapeHtml(s.padlock_code || '—')}</td>
             <td>${escapeHtml(s.client_name || '—')}</td>
-            <td>${escapeHtml(s.mobile || '—')}</td>
             <td>${escapeHtml(s.email || '—')}</td>
             <td>${escapeHtml(s.phone || '—')}</td>
             <td>${escapeHtml(s.repeated_invoice || '—')}</td>
@@ -92,7 +91,39 @@ document.addEventListener('DOMContentLoaded', () => {
             loadStorageData();
         });
     });
+
+    // Setup button groups for storage modal
+    const groups = [
+        { grid: 'storage-invoice-group', hidden: 'storage-repeated-invoice' },
+        { grid: 'storage-stripe-group', hidden: 'storage-stripe' }
+    ];
+
+    groups.forEach(g => {
+        const gridEl = document.getElementById(g.grid);
+        const hiddenEl = document.getElementById(g.hidden);
+        if (gridEl && hiddenEl) {
+            gridEl.querySelectorAll('.btn-group-opt').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    gridEl.querySelectorAll('.btn-group-opt').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    hiddenEl.value = btn.dataset.value;
+                });
+            });
+        }
+    });
 });
+
+function updateStorageBtnGroup(groupId, value) {
+    const gridEl = document.getElementById(groupId);
+    if (!gridEl) return;
+    gridEl.querySelectorAll('.btn-group-opt').forEach(btn => {
+        if (btn.dataset.value === value) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+}
 
 async function editStorage(id) {
     try {
@@ -106,11 +137,14 @@ async function editStorage(id) {
         setStorageVal('storage-move-in-date', s.move_in_date ? s.move_in_date.split('T')[0] : '');
         setStorageVal('storage-unit-numbers', s.unit_numbers);
         setStorageVal('storage-padlock-code', s.padlock_code);
-        setStorageVal('storage-mobile', s.mobile);
         setStorageVal('storage-email', s.email);
         setStorageVal('storage-phone', s.phone);
         setStorageVal('storage-repeated-invoice', s.repeated_invoice);
         setStorageVal('storage-stripe', s.stripe_sub);
+        
+        updateStorageBtnGroup('storage-invoice-group', s.repeated_invoice);
+        updateStorageBtnGroup('storage-stripe-group', s.stripe_sub);
+        
         setStorageVal('storage-sell-price', s.sell_price);
         setStorageVal('storage-buy-price', s.buy_price);
         setStorageVal('storage-status', s.status);
@@ -131,7 +165,7 @@ async function saveStorage(e) {
         move_in_date: getStorageVal('storage-move-in-date') || null,
         unit_numbers: getStorageVal('storage-unit-numbers'),
         padlock_code: getStorageVal('storage-padlock-code'),
-        mobile: getStorageVal('storage-mobile'),
+        mobile: '',
         email: getStorageVal('storage-email'),
         phone: getStorageVal('storage-phone'),
         repeated_invoice: getStorageVal('storage-repeated-invoice'),
