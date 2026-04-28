@@ -548,35 +548,35 @@ function renderMasterView(jobs) {
         }) : '—';
         return `<tr data-id="${j.id}">
             <td style="font-weight:600;white-space:nowrap;min-width:140px;position:sticky;left:0;z-index:10;background:var(--bg-surface);border-right:1px solid var(--border-color);">${jobEditCell(j.id,'first_name',j.first_name,'160px')}</td>
-            <td style="min-width:160px">${jobPriceCell(j.id, j.price_point)}</td>
-            <td>${jobBrandCell(j.id, j.brand)}</td>
+            ${isAdmin() ? `<td style="min-width:160px">${jobPriceCell(j.id, j.price_point)}</td>` : ''}
+            <td>${isAdmin() ? jobBrandCell(j.id, j.brand) : brandBadge(j.brand)}</td>
             <td style="white-space:nowrap;color:var(--text-muted);font-size:0.82rem">${dateStr}</td>
             ${isAdmin() ? `<td style="min-width:120px">${jobEditCell(j.id,'notes',j.notes,'160px')}</td>` : ''}
-            <td style="min-width:100px">${jobEditCell(j.id,'team',j.team,'120px')}</td>
-            <td style="min-width:140px">${jobContractorCell(j.id, j.contractor)}</td>
-            <td style="min-width:120px">${jobInvoiceCell(j.id, j.invoice)}</td>
+            ${isAdmin() ? `<td style="min-width:100px">${jobEditCell(j.id,'team',j.team,'120px')}</td>` : ''}
+            ${isAdmin() ? `<td style="min-width:140px">${jobContractorCell(j.id, j.contractor)}</td>` : ''}
+            ${isAdmin() ? `<td style="min-width:120px">${jobInvoiceCell(j.id, j.invoice)}</td>` : ''}
             <td style="min-width:90px">${jobEditCell(j.id,'extras',j.extras,'110px')}</td>
-            <td style="min-width:70px">${jobEditCell(j.id,'deposit',j.deposit,'70px')}</td>
+            ${isAdmin() ? `<td style="min-width:70px">${jobEditCell(j.id,'deposit',j.deposit,'70px')}</td>` : ''}
             <td style="min-width:120px">${jobEditCell(j.id,'move_out',j.move_out,'150px')}</td>
             <td style="min-width:120px">${jobEditCell(j.id,'move_in',j.move_in,'150px')}</td>
             <td style="min-width:90px">${jobEditCell(j.id,'phone',j.phone,'100px')}</td>
             <td><span class="sms-badge sms-${j.on_way_sms}">${j.on_way_sms === 'sent' ? '✓ Sent' : '✗ Not Sent'}</span></td>
             <td><span class="sms-badge sms-${j.last_sms}">${j.last_sms === 'sent' ? '✓ Sent' : '✗ Not Sent'}</span></td>
-            <td style="min-width:100px">${escapeHtml(j.time_sheet || '—')}</td>
-            <td style="min-width:90px">$${parseFloat(j.sell_price || 0).toFixed(0)}</td>
-            <td style="min-width:90px">$${parseFloat(j.buy_price || 0).toFixed(0)}</td>
-            <td style="min-width:90px;font-weight:bold" class="${((parseFloat(j.sell_price)||0) - (parseFloat(j.buy_price)||0)) >= 0 ? 'text-success' : 'text-danger'}">
+            ${isAdmin() ? `<td style="min-width:100px">${escapeHtml(j.time_sheet || '—')}</td>` : ''}
+            ${isAdmin() ? `<td style="min-width:90px">$${parseFloat(j.sell_price || 0).toFixed(0)}</td>` : ''}
+            ${isAdmin() ? `<td style="min-width:90px">$${parseFloat(j.buy_price || 0).toFixed(0)}</td>` : ''}
+            ${isAdmin() ? `<td style="min-width:90px;font-weight:bold" class="${((parseFloat(j.sell_price)||0) - (parseFloat(j.buy_price)||0)) >= 0 ? 'text-success' : 'text-danger'}">
                 $${((parseFloat(j.sell_price)||0) - (parseFloat(j.buy_price)||0)).toFixed(0)}
-            </td>
-            <td style="max-width:180px;white-space:normal;font-size:0.75rem;color:var(--text-secondary);">${escapeHtml(j.public_comment || '—')}</td>
+            </td>` : ''}
+            ${isAdmin() ? `<td style="max-width:180px;white-space:normal;font-size:0.75rem;color:var(--text-secondary);">${escapeHtml(j.public_comment || '—')}</td>` : ''}
             <td class="actions-cell" style="white-space:nowrap; position:relative;">
                 <button class="btn btn-sm btn-ghost" onclick="toggleJobMenu(${j.id}, event)" style="font-size:1.2rem;padding:4px 8px;">⋮</button>
                 <div id="job-menu-${j.id}" class="job-action-menu hidden" style="position:absolute;right:10px;top:100%;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:6px;z-index:99;display:flex;flex-direction:column;min-width:160px;box-shadow:var(--shadow-md);">
-                    <button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="editJob(${j.id})">Edit Job</button>
-                    ${currentJobsView !== 'archived' ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="archiveJob(${j.id})">Archive Job</button>` : ''}
-                    <button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="openPublicComment(${j.id})">Public Comment</button>
+                    ${isAdmin() ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="editJob(${j.id})">Edit Job</button>` : ''}
+                    ${currentJobsView !== 'archived' && isAdmin() ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="archiveJob(${j.id})">Archive Job</button>` : ''}
+                    ${isAdmin() ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="openPublicComment(${j.id})">Public Comment</button>` : ''}
                     <button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="markJobCompleted(${j.id})">Mark as Completed</button>
-                    <button class="btn btn-ghost text-danger" style="justify-content:flex-start;border-radius:0;padding:10px 16px;color:var(--danger);" onclick="deleteJob(${j.id})">Delete Job</button>
+                    ${isAdmin() ? `<button class="btn btn-ghost text-danger" style="justify-content:flex-start;border-radius:0;padding:10px 16px;color:var(--danger);" onclick="deleteJob(${j.id})">Delete Job</button>` : ''}
                 </div>
             </td>
         </tr>`;

@@ -92,7 +92,7 @@ function updateUserInfo() {
 function applyRBAC() {
     const admin = isAdmin();
 
-    document.querySelectorAll('.col-private-notes').forEach(el => {
+    document.querySelectorAll('.col-private-notes, .col-admin-only').forEach(el => {
         el.style.display = admin ? '' : 'none';
     });
 
