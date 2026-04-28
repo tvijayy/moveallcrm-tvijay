@@ -724,12 +724,44 @@
                     <div id="expand-modal-comments-list" style="max-height:150px; overflow-y:auto; background:var(--bg-base); padding:12px; border-radius:6px; margin-bottom:12px; font-size:0.85rem; color:var(--text-secondary);">
                         <div style="color:var(--text-muted); text-align:center; padding:12px 0;">No comments yet.</div>
                     </div>
-                    <div style="display:flex; gap:8px;">
+                    <div style="display:flex; gap:8px; position:relative;">
                         <input type="hidden" id="expand-modal-id">
-                        <input type="text" id="expand-modal-comment-input" placeholder="Type a comment..." style="flex:1; padding:8px 12px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-base); color:var(--text-primary); font-size:0.85rem;">
+                        <input type="text" id="expand-modal-comment-input" placeholder="Type a comment... (use @ to tag)" style="flex:1; padding:8px 12px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-base); color:var(--text-primary); font-size:0.85rem;" oninput="handleCommentAtMention(event)">
+                        <div id="mention-dropdown" class="hidden" style="position:absolute; bottom:calc(100% + 4px); left:0; background:var(--bg-elevated); border:1px solid var(--border-color); border-radius:6px; max-height:150px; overflow-y:auto; width:200px; box-shadow:var(--shadow-md); z-index:100;"></div>
                         <button class="btn btn-ghost col-admin-only" title="Upload Image" style="padding:0 8px;font-size:1.2rem;">📷</button>
                         <button class="btn btn-primary" style="padding:8px 16px;font-size:0.85rem;" onclick="addJobCommentFromModal()">Post</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Times Modal -->
+    <div class="modal-overlay hidden" id="job-times-modal">
+        <div class="modal" style="max-width:500px; padding:0;">
+            <div class="modal-header" style="border-bottom:1px solid var(--border-color); padding:16px 20px;">
+                <h2 style="font-size:1.1rem;margin:0;">Submit Job Times</h2>
+                <button class="btn btn-ghost" onclick="closeModal('job-times-modal')" style="padding:4px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div style="padding:20px;">
+                <input type="hidden" id="job-times-id">
+                <div class="form-group" style="margin-bottom:20px;">
+                    <label for="job-times-sheet" style="font-size:0.85rem; font-weight:600; margin-bottom:8px; display:block;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Time Sheet</label>
+                    <div style="border:1px solid var(--border-color); border-radius:6px; background:var(--bg-base); overflow:hidden;">
+                        <div style="background:var(--bg-surface); border-bottom:1px solid var(--border-color); padding:6px 12px; display:flex; gap:12px;">
+                            <span style="font-weight:bold; cursor:pointer;">H</span>
+                            <span style="font-weight:bold; cursor:pointer;">B</span>
+                            <span style="font-style:italic; cursor:pointer;">I</span>
+                            <span style="text-decoration:underline; cursor:pointer;">U</span>
+                        </div>
+                        <textarea id="job-times-sheet" rows="6" placeholder="Enter times here..." style="font-family:inherit; width:100%; border:none; padding:12px; background:transparent; resize:vertical; outline:none;"></textarea>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:12px;">
+                    <button class="btn btn-secondary" onclick="closeModal('job-times-modal')">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveJobTimes()">Update</button>
                 </div>
             </div>
         </div>

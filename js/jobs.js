@@ -586,6 +586,7 @@ function renderMasterView(jobs) {
                     ${currentJobsView !== 'archived' && isAdmin() ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="archiveJob(${j.id})">Archive Job</button>` : ''}
                     ${isAdmin() ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="openPublicComment(${j.id})">Public Comment</button>` : ''}
                     <button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="markJobCompleted(${j.id})">Mark as Completed</button>
+                    <button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="openJobTimesModal(${j.id})">Upload Job Times</button>
                     ${isAdmin() ? `<button class="btn btn-ghost text-danger" style="justify-content:flex-start;border-radius:0;padding:10px 16px;color:var(--danger);" onclick="deleteJob(${j.id})">Delete Job</button>` : ''}
                 </div>
             </td>
@@ -1048,4 +1049,92 @@ function addJobCommentFromModal() {
     input.value = '';
     
     showToast('Comment added', '', 'success');
+}
+
+let teamMembersCache = null;
+
+async function handleCommentAtMention(e) {
+    const val = e.target.value;
+    const drop = document.getElementById('mention-dropdown');
+    const atIndex = val.lastIndexOf('@');
+    
+    if (atIndex === -1) {
+        drop.classList.add('hidden');
+        return;
+    }
+
+    // Only trigger if @ is the first character or preceded by a space
+    if (atIndex > 0 && val[atIndex - 1] !== ' ') {
+        drop.classList.add('hidden');
+        return;
+    }
+
+    const search = val.substring(atIndex + 1).toLowerCase();
+    
+    if (search.includes(' ')) {
+        drop.classList.add('hidden');
+        return;
+    }
+
+    if (!teamMembersCache) {
+        try {
+            const res = await api.get('/users');
+            if (res.success) teamMembersCache = res.data;
+        } catch(err) {}
+    }
+
+    if (!teamMembersCache) return;
+
+    const filtered = teamMembersCache.filter(u => {
+        const name = (u.name || '').toLowerCase();
+        return name.includes(search);
+    });
+
+    if (filtered.length > 0) {
+        drop.innerHTML = filtered.map(u => {
+            const nameEscaped = (u.name || '').replace(/'/g, "\\'");
+            return `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem; border-bottom:1px solid var(--border-color);" onmouseover="this.style.background='var(--bg-surface)'" onmouseout="this.style.background='transparent'" onclick="insertMention('${nameEscaped}')">
+                ${escapeHtml(u.name || '')}
+            </div>`;
+        }).join('');
+        drop.classList.remove('hidden');
+    } else {
+        drop.classList.add('hidden');
+    }
+}
+
+function insertMention(name) {
+    const input = document.getElementById('expand-modal-comment-input');
+    const val = input.value;
+    const atIndex = val.lastIndexOf('@');
+    input.value = val.substring(0, atIndex) + '@' + name + ' ';
+    document.getElementById('mention-dropdown').classList.add('hidden');
+    input.focus();
+}
+
+function openJobTimesModal(id) {
+    const job = allJobsCache.find(j => j.id === id);
+    if (!job) return;
+    document.getElementById('job-times-id').value = id;
+    document.getElementById('job-times-sheet').value = job.time_sheet || '';
+    openModal('job-times-modal');
+}
+
+async function saveJobTimes() {
+    const id = document.getElementById('job-times-id').value;
+    const times = document.getElementById('job-times-sheet').value;
+    if (!id) return;
+    
+    try {
+        const res = await api.put(`/jobs/${id}`, { time_sheet: times });
+        if (res.success) {
+            showToast('Success', 'Job times updated successfully', 'success');
+            closeModal('job-times-modal');
+            loadJobsData(); // Refresh UI
+        } else {
+            showToast('Error', res.error || 'Failed to update times', 'error');
+        }
+    } catch (e) {
+        showToast('Error', 'Failed to update job times', 'error');
+    }
 }
