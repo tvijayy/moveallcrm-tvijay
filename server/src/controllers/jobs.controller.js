@@ -44,7 +44,7 @@ async function create(req, res, next) {
     try {
         const { first_name, last_name, phone, email, team, contractor, extras, deposit,
                 invoice, move_out, second_stop, move_in, on_way_sms, last_sms,
-                time_sheet, move_date, brand, status, price_point, notes } = req.body;
+                time_sheet, move_date, brand, status, price_point, notes, public_comment, staff_comments } = req.body;
 
         const { data, error } = await supabase.from('jobs').insert({
             first_name, last_name,
@@ -57,6 +57,7 @@ async function create(req, res, next) {
             time_sheet: time_sheet || null, move_date: move_date || null,
             brand: brand || null, status: status || 'scheduled',
             price_point: price_point || null, notes: notes || null,
+            public_comment: public_comment || null, staff_comments: staff_comments || null
         }).select().single();
 
         if (error) throw error;
@@ -70,7 +71,7 @@ async function update(req, res, next) {
         const numericFields = ['deposit'];
         const fields = ['first_name','last_name','phone','email','team','contractor','extras',
                         'deposit','invoice','move_out','second_stop','move_in','on_way_sms',
-                        'last_sms','time_sheet','move_date','brand','status','price_point','notes'];
+                        'last_sms','time_sheet','move_date','brand','status','price_point','notes','public_comment','staff_comments'];
 
         const updates = { updated_at: new Date().toISOString() };
         for (const f of fields) {

@@ -977,7 +977,15 @@ function openJobExpandModal(id) {
     const list = document.getElementById('expand-modal-comments-list');
     if (list) {
         list.innerHTML = '';
-        if (!job._localComments || job._localComments.length === 0) {
+        if (!job._localComments) {
+            try {
+                job._localComments = job.staff_comments ? JSON.parse(job.staff_comments) : [];
+            } catch(e) {
+                job._localComments = [];
+            }
+        }
+        
+        if (job._localComments.length === 0) {
             list.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding:12px 0;">No comments yet.</div>`;
         } else {
             job._localComments.forEach(c => {
@@ -1017,6 +1025,10 @@ function addJobCommentFromModal() {
 
     if (!job._localComments) job._localComments = [];
     job._localComments.push({ roleColor, userName, text, time });
+
+    // Persist to database
+    api.put(`/jobs/${id}`, { staff_comments: JSON.stringify(job._localComments) })
+       .catch(err => console.error('Failed to save comment to database:', err));
 
     const div = document.createElement('div');
     div.style.cssText = 'margin-bottom:8px; border-bottom:1px solid var(--border-color); padding-bottom:4px;';
