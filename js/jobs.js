@@ -974,6 +974,21 @@ function openJobExpandModal(id) {
     const inpEl = document.getElementById('expand-modal-comment-input');
     if(inpEl) inpEl.value = '';
     
+    const list = document.getElementById('expand-modal-comments-list');
+    if (list) {
+        list.innerHTML = '';
+        if (!job._localComments || job._localComments.length === 0) {
+            list.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding:12px 0;">No comments yet.</div>`;
+        } else {
+            job._localComments.forEach(c => {
+                const div = document.createElement('div');
+                div.style.cssText = 'margin-bottom:8px; border-bottom:1px solid var(--border-color); padding-bottom:4px;';
+                div.innerHTML = `<strong style="color:${c.roleColor};">${escapeHtml(c.userName)}</strong> <span style="font-size:0.7rem;">(${c.time})</span><br>${escapeHtml(c.text)}`;
+                list.appendChild(div);
+            });
+        }
+    }
+
     if (typeof applyRBAC === 'function') applyRBAC();
 
     openModal('job-expand-modal');
@@ -990,17 +1005,23 @@ function addJobCommentFromModal() {
     const text = input.value.trim();
     if (!text || !id) return;
 
+    const job = allJobsCache.find(j => j.id == id);
+    if (!job) return;
+
     const list = document.getElementById('expand-modal-comments-list');
     const user = getCurrentUser();
     
-    const div = document.createElement('div');
-    div.style.cssText = 'margin-bottom:8px; border-bottom:1px solid var(--border-color); padding-bottom:4px;';
-    
     const roleColor = user?.role === 'admin' ? 'var(--primary-400)' : 'var(--success)';
     const userName = user?.name || 'Unknown';
-    
+    const time = 'Just now';
+
+    if (!job._localComments) job._localComments = [];
+    job._localComments.push({ roleColor, userName, text, time });
+
+    const div = document.createElement('div');
+    div.style.cssText = 'margin-bottom:8px; border-bottom:1px solid var(--border-color); padding-bottom:4px;';
     div.innerHTML = `
-        <strong style="color:${roleColor};">${escapeHtml(userName)}</strong> <span style="font-size:0.7rem;">(Just now)</span><br>
+        <strong style="color:${roleColor};">${escapeHtml(userName)}</strong> <span style="font-size:0.7rem;">(${time})</span><br>
         ${escapeHtml(text)}
     `;
     
