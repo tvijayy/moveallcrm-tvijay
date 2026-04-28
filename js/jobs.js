@@ -548,11 +548,14 @@ function renderMasterView(jobs) {
         }) : '—';
         return `<tr data-id="${j.id}">
             <td style="font-weight:600;white-space:nowrap;min-width:140px;position:sticky;left:0;z-index:10;background:var(--bg-surface);border-right:1px solid var(--border-color);">
-                <div style="display:flex;align-items:center;gap:6px;">
-                    <button class="btn btn-ghost" style="padding:2px;min-width:auto;height:auto;" onclick="toggleJobExpand(${j.id})">
-                        <svg id="expand-icon-${j.id}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                <div style="display:flex;align-items:center;gap:6px;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="color:var(--danger);font-size:0.8rem;">🔴</span>
+                        ${jobEditCell(j.id,'first_name',j.first_name,'130px')}
+                    </div>
+                    <button class="btn btn-ghost" style="padding:4px;min-width:auto;height:auto;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-base);color:var(--text-muted);" onclick="openJobExpandModal(${j.id})" title="Expand Job Details">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                     </button>
-                    ${jobEditCell(j.id,'first_name',j.first_name,'130px')}
                 </div>
             </td>
             ${isAdmin() ? `<td style="min-width:160px">${jobPriceCell(j.id, j.price_point)}</td>` : ''}
@@ -584,42 +587,6 @@ function renderMasterView(jobs) {
                     ${isAdmin() ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="openPublicComment(${j.id})">Public Comment</button>` : ''}
                     <button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="markJobCompleted(${j.id})">Mark as Completed</button>
                     ${isAdmin() ? `<button class="btn btn-ghost text-danger" style="justify-content:flex-start;border-radius:0;padding:10px 16px;color:var(--danger);" onclick="deleteJob(${j.id})">Delete Job</button>` : ''}
-                </div>
-            </td>
-        </tr>
-        <tr id="job-expand-${j.id}" class="hidden" style="background:var(--bg-base);">
-            <td colspan="21" style="padding:16px;border-bottom:1px solid var(--border-color);position:relative;left:0;">
-                <div style="display:flex; gap:24px; width:max-content; min-width:100%; margin:0 auto; align-items: stretch; flex-wrap:wrap;">
-                    <!-- Job Details -->
-                    <div style="flex:1; background:var(--bg-surface); padding:16px; border-radius:8px; border:1px solid var(--border-color); min-width:250px;">
-                        <h4 style="margin-top:0;margin-bottom:12px;color:var(--text-primary);font-size:0.9rem;">Job Details</h4>
-                        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6;">
-                            <p style="margin:4px 0;"><strong>Move Out:</strong> ${escapeHtml(j.move_out || '—')}</p>
-                            <p style="margin:4px 0;"><strong>Move In:</strong> ${escapeHtml(j.move_in || '—')}</p>
-                            <p style="margin:4px 0;"><strong>Phone:</strong> ${escapeHtml(j.phone || '—')}</p>
-                            <p style="margin:4px 0;"><strong>Extras:</strong> ${escapeHtml(j.extras || '—')}</p>
-                        </div>
-                    </div>
-                    
-                    <!-- SMS Actions -->
-                    <div style="flex:1; background:var(--bg-surface); padding:16px; border-radius:8px; border:1px solid var(--border-color); min-width:200px;">
-                        <h4 style="margin-top:0;margin-bottom:12px;color:var(--text-primary);font-size:0.9rem;">Quick SMS</h4>
-                        <button class="btn btn-primary" style="width:100%;margin-bottom:8px;justify-content:center;" onclick="sendQuickSMS(${j.id}, 'on_way')">SMS - On the way</button>
-                        <button class="btn btn-secondary" style="width:100%;justify-content:center;" onclick="sendQuickSMS(${j.id}, 'running_late')">SMS - Running late</button>
-                    </div>
-
-                    <!-- Comments -->
-                    <div style="flex:1.5; background:var(--bg-surface); padding:16px; border-radius:8px; border:1px solid var(--border-color); display:flex; flex-direction:column; min-width:300px;">
-                        <h4 style="margin-top:0;margin-bottom:12px;color:var(--text-primary);font-size:0.9rem;">Comments</h4>
-                        <div id="comments-list-${j.id}" style="flex:1; max-height:120px; overflow-y:auto; background:var(--bg-base); padding:8px; border-radius:6px; margin-bottom:12px; font-size:0.8rem; color:var(--text-secondary);">
-                            <div style="color:var(--text-muted); text-align:center; padding:12px 0;">No comments yet.</div>
-                        </div>
-                        <div style="display:flex; gap:8px;">
-                            <input type="text" id="comment-input-${j.id}" placeholder="Type a comment..." style="flex:1; padding:6px 10px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-base); color:var(--text-primary); font-size:0.85rem;">
-                            ${isAdmin() ? `<button class="btn btn-ghost" title="Upload Image" style="padding:0 8px;">📷</button>` : ''}
-                            <button class="btn btn-primary" style="padding:6px 12px;font-size:0.85rem;" onclick="addJobComment(${j.id})">Post</button>
-                        </div>
-                    </div>
                 </div>
             </td>
         </tr>`;
@@ -967,32 +934,65 @@ async function archiveJob(id) {
     }
 }
 
-function toggleJobExpand(id) {
-    const row = document.getElementById(`job-expand-${id}`);
-    const icon = document.getElementById(`expand-icon-${id}`);
-    if (row.classList.contains('hidden')) {
-        row.classList.remove('hidden');
-        if(icon) icon.style.transform = 'rotate(180deg)';
-    } else {
-        row.classList.add('hidden');
-        if(icon) icon.style.transform = 'rotate(0deg)';
-    }
+function openJobExpandModal(id) {
+    const job = allJobsCache.find(j => j.id === id);
+    if (!job) return;
+
+    document.getElementById('expand-modal-id').value = id;
+    const name = escapeHtml((job.first_name || '') + ' ' + (job.last_name || '')).trim();
+    
+    const titleNameEl = document.getElementById('expand-modal-title-name');
+    if(titleNameEl) titleNameEl.innerHTML = `🔴 ${name}`;
+    
+    const phoneEl = document.getElementById('expand-modal-phone');
+    if(phoneEl) phoneEl.textContent = job.phone || '—';
+    const phone2El = document.getElementById('expand-modal-phone2');
+    if(phone2El) phone2El.textContent = job.phone || '—';
+    
+    const dateStr = job.move_date ? new Date(job.move_date).toLocaleString('en-AU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+    const dateEl = document.getElementById('expand-modal-date');
+    if(dateEl) dateEl.textContent = dateStr;
+    
+    const fnameEl = document.getElementById('expand-modal-fullname');
+    if(fnameEl) fnameEl.innerHTML = `🔴 ${name}`;
+    
+    const brandBadgeHTML = job.brand === 'MoveAll' ? '<span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">MoveAll</span>' : 
+                          job.brand === 'TBMI' ? '<span style="background:#dc2626;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">TBMI</span>' : 
+                          `<span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">${escapeHtml(job.brand||'—')}</span>`;
+    const brandEl = document.getElementById('expand-modal-brand');
+    if(brandEl) brandEl.innerHTML = brandBadgeHTML;
+    
+    const exEl = document.getElementById('expand-modal-extras');
+    if(exEl) exEl.textContent = job.extras || '—';
+    const tmEl = document.getElementById('expand-modal-team');
+    if(tmEl) tmEl.textContent = job.team || '—';
+    const moEl = document.getElementById('expand-modal-moveout');
+    if(moEl) moEl.textContent = job.move_out || '—';
+    const miEl = document.getElementById('expand-modal-movein');
+    if(miEl) miEl.textContent = job.move_in || '—';
+    
+    const inpEl = document.getElementById('expand-modal-comment-input');
+    if(inpEl) inpEl.value = '';
+    
+    if (typeof applyRBAC === 'function') applyRBAC();
+
+    openModal('job-expand-modal');
 }
 
 function sendQuickSMS(id, type) {
     showToast('SMS Request', `Twilio integration pending. Preparing to send ${type} SMS.`, 'success');
-    // We will integrate Twilio API call here later
 }
 
-function addJobComment(id) {
-    const input = document.getElementById(`comment-input-${id}`);
+function addJobCommentFromModal() {
+    const id = document.getElementById('expand-modal-id').value;
+    const input = document.getElementById('expand-modal-comment-input');
+    if (!input) return;
     const text = input.value.trim();
-    if (!text) return;
+    if (!text || !id) return;
 
-    const list = document.getElementById(`comments-list-${id}`);
+    const list = document.getElementById('expand-modal-comments-list');
     const user = getCurrentUser();
     
-    // Create new comment element
     const div = document.createElement('div');
     div.style.cssText = 'margin-bottom:8px; border-bottom:1px solid var(--border-color); padding-bottom:4px;';
     
@@ -1004,16 +1004,15 @@ function addJobComment(id) {
         ${escapeHtml(text)}
     `;
     
-    // Remove "No comments" message if present
-    if (list.innerHTML.includes('No comments yet')) {
+    if (list && list.innerHTML.includes('No comments yet')) {
         list.innerHTML = '';
     }
     
-    list.appendChild(div);
+    if (list) {
+        list.appendChild(div);
+        list.scrollTop = list.scrollHeight;
+    }
     input.value = '';
-    
-    // Auto-scroll to bottom
-    list.scrollTop = list.scrollHeight;
     
     showToast('Comment added', '', 'success');
 }
