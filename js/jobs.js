@@ -663,9 +663,9 @@ function renderMasterView(jobs) {
             </td>
             ${isAdmin() ? `<td style="min-width:160px">${jobPriceCell(j.id, j.price_point)}</td>` : ''}
             <td>${isAdmin() ? jobBrandCell(j.id, j.brand) : brandBadge(j.brand)}</td>
+            <td>${isAdmin() ? jobCategoryCell(j.id, j.category) : escapeHtml(j.category || '—')}</td>
             <td style="white-space:nowrap;color:var(--text-muted);font-size:0.82rem">${dateStr}</td>
             ${isAdmin() ? `<td style="min-width:120px">${jobEditCell(j.id,'notes',j.notes,'160px')}</td>` : ''}
-            <td>${isAdmin() ? jobCategoryCell(j.id, j.category) : escapeHtml(j.category || '—')}</td>
             ${isAdmin() ? `<td style="min-width:140px">${jobContractorCell(j.id, j.contractor)}</td>` : ''}
             ${isAdmin() ? `<td style="min-width:120px">${jobInvoiceCell(j.id, j.invoice)}</td>` : ''}
             <td style="min-width:90px">${jobEditCell(j.id,'extras',j.extras,'110px')}</td>

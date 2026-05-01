@@ -268,10 +268,11 @@ async function inlineSave(id, field, value) {
                 sel.style.color       = sc.color;
                 sel.style.borderColor = sc.color + '60';
             }
-            if (value === 'lost') {
+            if (value === 'lost' || value === 'won') {
                 const completeRes = await api.put(`/leads/${id}`, { is_completed: true });
                 if (completeRes.success) {
                     showToast('Moved', 'Lead moved to Completed tab', 'success');
+                    syncLeadToContact(id);
                     loadLeadsData();
                 }
             }
@@ -289,8 +290,48 @@ async function markLeadComplete(id) {
     const ok = await inlineSave(id, 'is_completed', true);
     if (ok) {
         showToast('Completed', 'Lead moved to Completed tab ✓', 'success');
+        syncLeadToContact(id);
         loadLeadsData();
     }
+}
+
+async function syncLeadToContact(leadId) {
+    try {
+        const leadRes = await api.get(`/leads/${leadId}`);
+        if (!leadRes.success) return;
+        const l = leadRes.data;
+        if (!l || !l.customer_name) return;
+        
+        const contactsRes = await api.get('/contacts', { limit: 1000 });
+        let existingId = null;
+        if (contactsRes.success) {
+            const contacts = contactsRes.data || [];
+            const match = contacts.find(c => 
+                (c.mobile && l.phone && c.mobile === l.phone) || 
+                (c.email && l.email && c.email === l.email)
+            );
+            if (match) existingId = match.id;
+        }
+
+        const data = {
+            client_name: l.customer_name || 'Unknown Lead',
+            address: l.move_out_address || '',
+            first_name: l.customer_name || '',
+            last_name: '',
+            email: l.email || '',
+            mobile: l.phone || '',
+            category: l.category || '',
+            last_move_date: l.move_date ? l.move_date.split('T')[0] : new Date().toISOString().split('T')[0],
+            last_move_in: l.move_in_address || '',
+            last_team: ''
+        };
+
+        if (existingId) {
+            await api.put(`/contacts/${existingId}`, data);
+        } else {
+            await api.post('/contacts', data);
+        }
+    } catch(e) { console.error('Failed to sync contact:', e); }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -855,6 +896,9 @@ async function saveLead(e) {
         const res = editId ? await api.put(`/leads/${editId}`, data) : await api.post('/leads', data);
         if (res.success) {
             showToast('Success', editId ? 'Lead updated' : 'Lead created', 'success');
+            if (data.status === 'lost' || data.status === 'won') {
+                syncLeadToContact(editId || res.data?.id);
+            }
             closeModal('lead-modal');
             loadLeadsData();
         } else {
