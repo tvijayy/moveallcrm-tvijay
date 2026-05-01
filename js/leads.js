@@ -268,6 +268,13 @@ async function inlineSave(id, field, value) {
                 sel.style.color       = sc.color;
                 sel.style.borderColor = sc.color + '60';
             }
+            if (value === 'lost') {
+                const completeRes = await api.put(`/leads/${id}`, { is_completed: true });
+                if (completeRes.success) {
+                    showToast('Moved', 'Lead moved to Completed tab', 'success');
+                    loadLeadsData();
+                }
+            }
         }
         return true;
     } catch (err) {
@@ -368,6 +375,12 @@ function showLeadMenu(btn, leadId, phone, email, leadName) {
             ✉️ Send 3M Booking Form
         </div>
         <div class="ctx-divider"></div>
+        ${currentLeadsTab === 'completed' ? `
+        <div class="ctx-item" onclick="moveToActiveLeads(${leadId});closeCtxMenu()">
+            ↩️ Move to Active Leads
+        </div>
+        <div class="ctx-divider"></div>
+        ` : ''}
         <div class="ctx-item ctx-item-danger" onclick="deleteLead(${leadId});closeCtxMenu()">
             🗑️ Delete Lead
         </div>
@@ -418,6 +431,20 @@ async function triggerFromMenu(leadId, action, phone, email) {
         }
     } catch (err) {
         showToast('Error', 'Failed to trigger action', 'error');
+    }
+}
+
+async function moveToActiveLeads(id) {
+    try {
+        const res = await api.put(`/leads/${id}`, { is_completed: false });
+        if (res.success) {
+            showToast('Success', 'Lead moved to Active tab', 'success');
+            loadLeadsData();
+        } else {
+            showToast('Error', res.error || 'Failed to move lead', 'error');
+        }
+    } catch (err) {
+        showToast('Error', 'Failed to move lead', 'error');
     }
 }
 

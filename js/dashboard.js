@@ -27,7 +27,11 @@ async function loadDashboardData() {
 
         // ── 2. Fetch all jobs for the calendar ────────────────
         const res = await api.get('/jobs', { limit: 500 });
-        dashJobsCache = res.success ? (res.data || []) : [];
+        let jobs = res.success ? (res.data || []) : [];
+        if (user && user.role !== 'admin') {
+            jobs = jobs.filter(j => j.team && j.team.toLowerCase().includes(user.name.toLowerCase()));
+        }
+        dashJobsCache = jobs;
 
         // ── 3. Render the dashboard calendar ─────────────────
         renderDashCalendar(dashJobsCache);

@@ -189,6 +189,11 @@ async function loadJobsData() {
         if (!res.success) { showToast('Error', res.error || 'Failed to load jobs', 'error'); return; }
         let jobs = res.data || [];
 
+        const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+        if (user && user.role !== 'admin') {
+            jobs = jobs.filter(j => j.team && j.team.toLowerCase().includes(user.name.toLowerCase()));
+        }
+
         // Apply client-side filters
         if (brandFilter && brandFilter !== 'all') jobs = jobs.filter(j => j.brand === brandFilter);
         if (priceFilter && priceFilter !== 'all') jobs = jobs.filter(j => j.price_point === priceFilter);
@@ -239,7 +244,12 @@ function startCalendarRefresh() {
         try {
             const res = await api.get('/jobs', { limit: 200 });
             if (res.success) {
-                allJobsCache = res.data || [];
+                let jobs = res.data || [];
+                const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+                if (user && user.role !== 'admin') {
+                    jobs = jobs.filter(j => j.team && j.team.toLowerCase().includes(user.name.toLowerCase()));
+                }
+                allJobsCache = jobs;
                 renderCalendarView(allJobsCache);
             }
         } catch (e) { /* silent refresh */ }
