@@ -320,7 +320,7 @@ async function syncLeadToContact(leadId) {
             last_name: '',
             email: l.email || '',
             mobile: l.phone || '',
-            category: l.category || '',
+            category: 'residential', // leads don't map to contact categories, default to residential
             last_move_date: l.move_date ? l.move_date.split('T')[0] : new Date().toISOString().split('T')[0],
             last_move_in: l.move_in_address || '',
             last_team: ''

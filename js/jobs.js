@@ -533,7 +533,7 @@ async function syncJobToContact(jobId) {
             last_name: j.last_name || '',
             email: j.email || '',
             mobile: j.phone || '',
-            category: j.category || '',
+            category: j.category ? j.category.toLowerCase() : 'residential',
             last_move_date: j.move_date ? j.move_date.split('T')[0] : new Date().toISOString().split('T')[0],
             last_move_in: j.move_in || '',
             last_team: j.contractor || ''
