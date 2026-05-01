@@ -350,15 +350,46 @@ function startJobInlineEdit(el, id, field, currentVal) {
     });
 }
 
+async function handleDropdownChange(id, field, selectEl) {
+    let value = selectEl.value;
+    if (value === '__custom__') {
+        value = prompt(`Enter custom value for ${field.replace('_', ' ')}:`);
+        if (!value || !value.trim()) {
+            loadJobsData();
+            return;
+        }
+        value = value.trim();
+        if (field === 'invoice') {
+            await inlineInvoiceSave(id, value);
+        } else {
+            await inlineJobSave(id, field, value);
+        }
+        loadJobsData();
+        return;
+    }
+    
+    if (field === 'invoice') {
+        await inlineInvoiceSave(id, value);
+    } else {
+        await inlineJobSave(id, field, value);
+        if (field === 'price_point') updateJobPriceColor(selectEl);
+        if (field === 'brand') updateJobBrandColor(selectEl);
+    }
+}
+
 // Inline price point select (badge click → select)
 function jobPriceCell(id, current) {
+    const isCustom = current && !PRICE_COLORS[current];
     const opts = Object.keys(PRICE_COLORS).map(p =>
         `<option value="${escapeHtml(p)}" style="background:#111827;color:#fff;" ${p === current ? 'selected' : ''}>${escapeHtml(p)}</option>`
-    ).join('');
-    const c = current ? (PRICE_COLORS[current] || { bg:'#6b7280', text:'#fff' }) : null;
-    const style = c ? `background:${c.bg};color:${c.text};border:none;font-weight:700;font-size:0.75rem;border-radius:6px;padding:3px 24px 3px 8px;cursor:pointer;max-width:180px;appearance:none;-webkit-appearance:none;min-width:140px;text-align:center;`
+    ).join('') + 
+        (isCustom ? `<option value="${escapeHtml(current)}" selected style="background:#111827;color:#fff;">${escapeHtml(current)}</option>` : '') +
+        `<option value="__custom__" style="background:#111827;color:#f59e0b;">➕ Add custom</option>`;
+
+    const c = PRICE_COLORS[current] || { bg:'#6b7280', text:'#fff' };
+    const style = current ? `background:${c.bg};color:${c.text};border:none;font-weight:700;font-size:0.75rem;border-radius:6px;padding:3px 24px 3px 8px;cursor:pointer;max-width:180px;appearance:none;-webkit-appearance:none;min-width:140px;text-align:center;`
                     : `font-size:0.82rem;max-width:180px;min-width:140px;padding:3px 24px 3px 8px;appearance:none;-webkit-appearance:none;`;
-    return `<select class="inline-select" style="${style}" onchange="inlineJobSave(${id},'price_point',this.value);updateJobPriceColor(this)">
+    return `<select class="inline-select" style="${style}" onchange="handleDropdownChange(${id},'price_point',this)">
         <option value="" style="background:#111827;color:#fff;">— Select —</option>${opts}
     </select>`;
 }
@@ -370,10 +401,13 @@ function updateJobPriceColor(sel) {
 // Inline brand select (badge click → select)
 function jobBrandCell(id, current) {
     const brands = ['MoveAll','TBMI'];
-    const opts = brands.map(b => `<option value="${b}" style="background:#111827;color:#fff;" ${b === current ? 'selected' : ''}>${b}</option>`).join('');
-    const c = current ? (BRAND_COLORS[current] || { bg:'#6b7280', text:'#fff' }) : { bg:'#6b7280', text:'#fff' };
+    const isCustom = current && !brands.includes(current);
+    const opts = brands.map(b => `<option value="${b}" style="background:#111827;color:#fff;" ${b === current ? 'selected' : ''}>${b}</option>`).join('') + 
+        (isCustom ? `<option value="${escapeHtml(current)}" selected style="background:#111827;color:#fff;">${escapeHtml(current)}</option>` : '') +
+        `<option value="__custom__" style="background:#111827;color:#f59e0b;">➕ Add custom</option>`;
+    const c = BRAND_COLORS[current] || { bg:'#6b7280', text:'#fff' };
     return `<select class="inline-select" style="background:${c.bg};color:${c.text};border:none;font-weight:800;font-size:0.78rem;border-radius:6px;padding:3px 22px 3px 10px;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center;min-width:95px;width:max-content;"
-        onchange="inlineJobSave(${id},'brand',this.value);updateJobBrandColor(this)">
+        onchange="handleDropdownChange(${id},'brand',this)">
         <option value="" style="background:#111827;color:#fff;">— Select —</option>${opts}
     </select>`;
 }
@@ -395,12 +429,15 @@ const INVOICE_OPTIONS = [
 ];
 
 function jobInvoiceCell(id, current) {
+    const isCustom = current && !INVOICE_OPTIONS.find(o => o.label === current);
     const opts = INVOICE_OPTIONS.map(o => 
         `<option value="${o.label}" style="background:#111827;color:#fff;" ${o.label === current ? 'selected' : ''}>${o.label}</option>`
-    ).join('');
+    ).join('') + 
+        (isCustom ? `<option value="${escapeHtml(current)}" selected style="background:#111827;color:#fff;">${escapeHtml(current)}</option>` : '') +
+        `<option value="__custom__" style="background:#111827;color:#f59e0b;">➕ Add custom</option>`;
     const c = INVOICE_OPTIONS.find(o => o.label === current) || { color: '#6b7280' };
     return `<select class="inline-select" style="background:${c.color};color:#fff;border:none;font-weight:700;font-size:0.75rem;border-radius:6px;padding:3px 22px 3px 10px;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center;min-width:110px;width:max-content;"
-        onchange="inlineInvoiceSave(${id}, this.value)">
+        onchange="handleDropdownChange(${id}, 'invoice', this)">
         <option value="" style="background:#111827;color:#fff;">— Invoice —</option>${opts}
     </select>`;
 }
@@ -534,12 +571,27 @@ function buildContractorDropList(jobId, currentVal, search) {
         onmouseenter="this.style.background='rgba(245,158,11,.08)'" onmouseleave="this.style.background='transparent'">
         ⚠ New TBC
     </div>`;
+    html += `<div onclick="handleCustomContractor(${jobId})"
+        style="padding:8px 14px;cursor:pointer;font-size:0.88rem;color:#f59e0b;border-top:1px solid var(--border-color,#374151)"
+        onmouseenter="this.style.background='rgba(245,158,11,.08)'" onmouseleave="this.style.background='transparent'">
+        ➕ Add custom
+    </div>`;
     return html || '<div style="padding:12px 14px;color:var(--text-muted);font-size:0.85rem">No results</div>';
 }
 
 function filterContractorDrop(input, jobId) {
     const list = document.getElementById(`ctr-list-${jobId}`);
     if (list) list.innerHTML = buildContractorDropList(jobId, '', input.value);
+}
+
+async function handleCustomContractor(jobId) {
+    closeContractorDrop();
+    const val = prompt('Enter custom contractor:');
+    if (val && val.trim()) {
+        const cell = document.querySelector(`tr[data-id="${jobId}"] .job-contractor-cell`);
+        if (cell) cell.innerHTML = `<span style="font-size:0.85rem;cursor:pointer">${escapeHtml(val.trim())}</span>`;
+        await inlineJobSave(jobId, 'contractor', val.trim());
+    }
 }
 
 async function selectContractorInline(jobId, company, el) {

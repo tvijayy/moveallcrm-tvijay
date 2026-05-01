@@ -58,7 +58,14 @@ function renderContractorsTable(contractors) {
 
     tbody.innerHTML = page.map(c => `
         <tr data-id="${c.id}">
-            <td>${escapeHtml(c.company || '—')}</td>
+            <td>
+                <div style="display:flex;align-items:center;gap:6px;justify-content:space-between;">
+                    ${escapeHtml(c.company || '—')}
+                    <button class="btn btn-ghost" style="padding:4px;min-width:auto;height:auto;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-base);color:var(--text-muted);" onclick="editContractor(${c.id})" title="Expand Contractor Details">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    </button>
+                </div>
+            </td>
             <td><span class="category-badge cat-${c.category}">${c.category || '—'}</span></td>
             <td><span class="tag-badge">${escapeHtml(c.tag || '—')}</span></td>
             <td>${escapeHtml(c.rates || '—')}</td>

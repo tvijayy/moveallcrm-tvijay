@@ -57,7 +57,14 @@ function renderStorageTable(entries) {
         const margin = sell - buy;
         return `
         <tr data-id="${s.id}">
-            <td style="position:sticky;left:0;z-index:10;background:var(--bg-surface);min-width:140px;">${escapeHtml(s.storage_location || '—')}</td>
+            <td style="position:sticky;left:0;z-index:10;background:var(--bg-surface);min-width:140px;">
+                <div style="display:flex;align-items:center;gap:6px;justify-content:space-between;">
+                    ${escapeHtml(s.storage_location || '—')}
+                    <button class="btn btn-ghost" style="padding:4px;min-width:auto;height:auto;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-base);color:var(--text-muted);" onclick="editStorage(${s.id})" title="Expand Storage Details">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    </button>
+                </div>
+            </td>
             <td>${s.move_in_date ? formatDate(s.move_in_date) : '—'}</td>
             <td>${escapeHtml(s.unit_numbers || '—')}</td>
             <td>${escapeHtml(s.padlock_code || '—')}</td>

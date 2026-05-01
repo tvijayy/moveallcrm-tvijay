@@ -680,7 +680,14 @@ function renderLeadsTable(leads) {
         const safeEmail  = escapeJsAttr(l.email || '');
 
         return `<tr data-id="${l.id}">
-            <td style="min-width:130px;position:sticky;left:0;z-index:10;background:var(--bg-surface);">${editableCell(l.id,'customer_name',l.customer_name,'text','130px')}</td>
+            <td style="min-width:130px;position:sticky;left:0;z-index:10;background:var(--bg-surface);">
+                <div style="display:flex;align-items:center;gap:6px;justify-content:space-between;">
+                    ${editableCell(l.id,'customer_name',l.customer_name,'text','130px')}
+                    <button class="btn btn-ghost" style="padding:4px;min-width:auto;height:auto;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-base);color:var(--text-muted);" onclick="editLead(${l.id})" title="Expand Lead Details">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    </button>
+                </div>
+            </td>
             <td class="text-muted" style="font-size:0.78rem;white-space:nowrap">${l.updated_at ? timeAgo(l.updated_at) : '—'}</td>
             <td style="min-width:168px">${buildStatusSelect(l.id, l.status)}</td>
             <td style="min-width:155px">${buildCategorySelect(l.id, l.category)}</td>
