@@ -455,6 +455,16 @@ async function markJobCompleted(id) {
     }
 }
 
+async function markJobUpcoming(id) {
+    const res = await api.put(`/jobs/${id}`, { status: 'scheduled' });
+    if (res.success) {
+        showToast('Success', 'Job moved to upcoming', 'success');
+        loadJobsData();
+    } else {
+        showToast('Error', res.error || 'Failed to move job', 'error');
+    }
+}
+
 // ─── Searchable contractor dropdown ──────────────────────────────────────────
 let _activeContractorDrop = null;
 
@@ -595,7 +605,8 @@ function renderMasterView(jobs) {
                     ${isAdmin() ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="editJob(${j.id})">Edit Job</button>` : ''}
                     ${currentJobsView !== 'archived' && isAdmin() ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="archiveJob(${j.id})">Archive Job</button>` : ''}
                     ${isAdmin() ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="openPublicComment(${j.id})">Public Comment</button>` : ''}
-                    <button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="markJobCompleted(${j.id})">Mark as Completed</button>
+                    ${currentJobsView !== 'past' ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="markJobCompleted(${j.id})">Mark as Completed</button>` : ''}
+                    ${currentJobsView === 'past' ? `<button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="markJobUpcoming(${j.id})">Move to Master view - upcoming</button>` : ''}
                     <button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="openJobTimesModal(${j.id})">Upload Job Times</button>
                     ${isAdmin() ? `<button class="btn btn-ghost text-danger" style="justify-content:flex-start;border-radius:0;padding:10px 16px;color:var(--danger);" onclick="deleteJob(${j.id})">Delete Job</button>` : ''}
                 </div>
