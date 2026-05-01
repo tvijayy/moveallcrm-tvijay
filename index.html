@@ -463,9 +463,9 @@
                                 <th style="position:sticky;left:0;z-index:11;background:var(--bg-elevated);border-right:1px solid var(--border-color);">Client</th>
                                 <th class="col-admin-only">Price Point</th>
                                 <th>Brand</th>
+                                <th>Category</th>
                                 <th>Date</th>
                                 <th class="col-private-notes">Private Notes</th>
-                                <th class="col-admin-only">Team</th>
                                 <th class="col-admin-only">Assign Contractor</th>
                                 <th class="col-admin-only">Invoice</th>
                                 <th>Extras</th>
@@ -571,10 +571,9 @@
                                 <th>Emails</th>
                                 <th>Mobile Numbers</th>
                                 <th>Contact Category</th>
-                                <th>Related Jobs</th>
                                 <th>Last Move Date</th>
                                 <th>Last Move In</th>
-                                <th>Last Team</th>
+                                <th>Contractor</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -782,7 +781,7 @@
                     </svg>
                 </button>
             </div>
-            <form id="lead-form" class="modal-form" onsubmit="saveLead(event)" style="max-height:80vh;overflow-y:auto;padding-right:4px">
+            <form id="lead-form" class="modal-form" onsubmit="saveLead(event)">
                 <input type="hidden" id="lead-id">
 
                 <!-- Lead Name -->
@@ -1027,8 +1026,9 @@
                 </div>
 
                 <!-- Price Point -->
-                <div class="form-group">
+                <div class="form-group" style="position:relative">
                     <label for="job-price-point">Price Point *</label>
+                    <button type="button" style="position:absolute;right:0;top:0;background:none;border:none;color:var(--primary-400);cursor:pointer;font-size:0.75rem;padding:0" onclick="addCustomModalOption('job-price-point', 'Price Point')">➕ Add custom</button>
                     <select id="job-price-point" required>
                         <option value="">— Select Price Point —</option>
                         <option value="$199ph (2M+T Eco)">$199ph (2M+T Eco)</option>
@@ -1043,9 +1043,22 @@
                     </select>
                 </div>
 
+                <!-- Category -->
+                <div class="form-group" style="position:relative">
+                    <label for="job-category">Category *</label>
+                    <button type="button" style="position:absolute;right:0;top:0;background:none;border:none;color:var(--primary-400);cursor:pointer;font-size:0.75rem;padding:0" onclick="addCustomModalOption('job-category', 'Category')">➕ Add custom</button>
+                    <select id="job-category" required>
+                        <option value="">— Select Category —</option>
+                        <option value="Residential">Residential</option>
+                        <option value="Commercial">Commercial</option>
+                        <option value="Corporate">Corporate</option>
+                    </select>
+                </div>
+
                 <!-- Contractor -->
-                <div class="form-group">
+                <div class="form-group" style="position:relative">
                     <label for="job-contractor">Assign a Contractor *</label>
+                    <button type="button" style="position:absolute;right:0;top:0;background:none;border:none;color:var(--primary-400);cursor:pointer;font-size:0.75rem;padding:0" onclick="addCustomModalOption('job-contractor', 'Contractor')">➕ Add custom</button>
                     <select id="job-contractor" required>
                         <option value="">— Select Contractor —</option>
                     </select>
@@ -1093,9 +1106,21 @@
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group">
+                    <div class="form-group" style="position:relative">
                         <label for="job-invoice">Invoice</label>
-                        <input type="text" id="job-invoice" placeholder="Invoice #">
+                        <button type="button" style="position:absolute;right:0;top:0;background:none;border:none;color:var(--primary-400);cursor:pointer;font-size:0.75rem;padding:0" onclick="addCustomModalOption('job-invoice', 'Invoice')">➕ Add custom</button>
+                        <select id="job-invoice">
+                            <option value="">— Invoice —</option>
+                            <option value="Done">Done</option>
+                            <option value="Waiting Times">Waiting Times</option>
+                            <option value="Afterpay Required">Afterpay Required</option>
+                            <option value="Paid inAdvance (Interstate)">Paid inAdvance (Interstate)</option>
+                            <option value="Add storage Costs">Add storage Costs</option>
+                            <option value="Times In">Times In</option>
+                            <option value="Invoiced in Advance (Interstate)">Invoiced in Advance (Interstate)</option>
+                            <option value="Discount Required">Discount Required</option>
+                            <option value="To Do">To Do</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="job-time-sheet">Time Sheet</label>
@@ -1304,17 +1329,15 @@
                             <option value="corporate">Corporate</option>
                         </select>
                     </div>
-                    <div class="form-group"><label for="contact-related-jobs">Related Jobs</label><input type="text"
-                            id="contact-related-jobs" placeholder="Job references"></div>
-                </div>
-                <div class="form-row">
                     <div class="form-group"><label for="contact-last-move-date">Last Move Date</label><input type="date"
                             id="contact-last-move-date"></div>
+                </div>
+                <div class="form-row">
                     <div class="form-group"><label for="contact-last-move-in">Last Move In</label><input type="text"
                             id="contact-last-move-in"></div>
-                </div>
-                <div class="form-group"><label for="contact-last-team">Last Team</label><input type="text"
+                    <div class="form-group"><label for="contact-last-team">Contractor</label><input type="text"
                         id="contact-last-team"></div>
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary"
                         onclick="closeModal('contact-modal')">Cancel</button>

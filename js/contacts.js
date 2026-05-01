@@ -71,7 +71,6 @@ function renderContactsTable(contacts) {
             <td>${escapeHtml(c.email || '—')}</td>
             <td>${escapeHtml(c.mobile || '—')}</td>
             <td><span class="category-badge cat-${c.category}">${c.category || '—'}</span></td>
-            <td>${escapeHtml(c.related_jobs || '—')}</td>
             <td>${c.last_move_date ? formatDate(c.last_move_date) : '—'}</td>
             <td title="${escapeHtml(c.last_move_in || '')}">${truncate(c.last_move_in || '—', 20)}</td>
             <td>${escapeHtml(c.last_team || '—')}</td>
@@ -99,7 +98,6 @@ async function editContact(id) {
         setContactVal('contact-email', c.email);
         setContactVal('contact-mobile', c.mobile);
         setContactVal('contact-category', c.category);
-        setContactVal('contact-related-jobs', c.related_jobs);
         setContactVal('contact-last-move-date', c.last_move_date ? c.last_move_date.split('T')[0] : '');
         setContactVal('contact-last-move-in', c.last_move_in);
         setContactVal('contact-last-team', c.last_team);
@@ -120,7 +118,6 @@ async function saveContact(e) {
         email: getContactVal('contact-email'),
         mobile: getContactVal('contact-mobile'),
         category: getContactVal('contact-category'),
-        related_jobs: getContactVal('contact-related-jobs'),
         last_move_date: getContactVal('contact-last-move-date') || null,
         last_move_in: getContactVal('contact-last-move-in'),
         last_team: getContactVal('contact-last-team')

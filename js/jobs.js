@@ -44,6 +44,27 @@ let calendarRefreshInterval = null;
 // Helper: get/set form values by element ID
 function getJobVal(id) { const el = document.getElementById(id); return el ? el.value : ''; }
 function setJobVal(id, v) { const el = document.getElementById(id); if (el) el.value = v || ''; }
+function setSelectValSafe(id, v) {
+    const el = document.getElementById(id);
+    if (!el || !v) return;
+    let exists = false;
+    for (let i = 0; i < el.options.length; i++) {
+        if (el.options[i].value === v) { exists = true; break; }
+    }
+    if (!exists) {
+        const opt = document.createElement('option');
+        opt.value = v; opt.textContent = v;
+        el.appendChild(opt);
+    }
+    el.value = v;
+}
+
+function addCustomModalOption(selectId, fieldName) {
+    const val = prompt(`Enter custom value for ${fieldName}:`);
+    if (val && val.trim()) {
+        setSelectValSafe(selectId, val.trim());
+    }
+}
 
 // ─── Brand Picker ─────────────────────────────────────────────────────────────
 let _selectedBrand = '';
@@ -278,6 +299,17 @@ const BRAND_COLORS = {
     'TBMI':    { bg:'#dc2626', text:'#fff' },
 };
 
+function jobCategoryCell(id, current) {
+    const opts = ['Residential', 'Commercial', 'Corporate'].map(c => 
+        `<option value="${c}" style="background:#111827;color:#fff;" ${c === current ? 'selected' : ''}>${c}</option>`
+    ).join('');
+    const cColor = current ? '#6366f1' : '#6b7280';
+    return `<select class="inline-select" style="background:transparent;color:${cColor};border:none;font-weight:600;font-size:0.8rem;cursor:pointer;appearance:none;-webkit-appearance:none;"
+        onchange="inlineJobSave(${id},'category',this.value);this.style.color=this.value?'#6366f1':'#6b7280'">
+        <option value="" style="background:#111827;color:#fff;">— Category —</option>${opts}
+    </select>`;
+}
+
 function priceBadge(pp) {
     if (!pp) return '<span style="color:var(--text-muted)">—</span>';
     const c = PRICE_COLORS[pp] || { bg:'#6b7280', text:'#fff' };
@@ -350,32 +382,7 @@ function startJobInlineEdit(el, id, field, currentVal) {
     });
 }
 
-async function handleDropdownChange(id, field, selectEl) {
-    let value = selectEl.value;
-    if (value === '__custom__') {
-        value = prompt(`Enter custom value for ${field.replace('_', ' ')}:`);
-        if (!value || !value.trim()) {
-            loadJobsData();
-            return;
-        }
-        value = value.trim();
-        if (field === 'invoice') {
-            await inlineInvoiceSave(id, value);
-        } else {
-            await inlineJobSave(id, field, value);
-        }
-        loadJobsData();
-        return;
-    }
-    
-    if (field === 'invoice') {
-        await inlineInvoiceSave(id, value);
-    } else {
-        await inlineJobSave(id, field, value);
-        if (field === 'price_point') updateJobPriceColor(selectEl);
-        if (field === 'brand') updateJobBrandColor(selectEl);
-    }
-}
+
 
 // Inline price point select (badge click → select)
 function jobPriceCell(id, current) {
@@ -383,13 +390,12 @@ function jobPriceCell(id, current) {
     const opts = Object.keys(PRICE_COLORS).map(p =>
         `<option value="${escapeHtml(p)}" style="background:#111827;color:#fff;" ${p === current ? 'selected' : ''}>${escapeHtml(p)}</option>`
     ).join('') + 
-        (isCustom ? `<option value="${escapeHtml(current)}" selected style="background:#111827;color:#fff;">${escapeHtml(current)}</option>` : '') +
-        `<option value="__custom__" style="background:#111827;color:#f59e0b;">➕ Add custom</option>`;
+        (isCustom ? `<option value="${escapeHtml(current)}" selected style="background:#111827;color:#fff;">${escapeHtml(current)}</option>` : '');
 
     const c = PRICE_COLORS[current] || { bg:'#6b7280', text:'#fff' };
     const style = current ? `background:${c.bg};color:${c.text};border:none;font-weight:700;font-size:0.75rem;border-radius:6px;padding:3px 24px 3px 8px;cursor:pointer;max-width:180px;appearance:none;-webkit-appearance:none;min-width:140px;text-align:center;`
                     : `font-size:0.82rem;max-width:180px;min-width:140px;padding:3px 24px 3px 8px;appearance:none;-webkit-appearance:none;`;
-    return `<select class="inline-select" style="${style}" onchange="handleDropdownChange(${id},'price_point',this)">
+    return `<select class="inline-select" style="${style}" onchange="inlineJobSave(${id},'price_point',this.value);updateJobPriceColor(this)">
         <option value="" style="background:#111827;color:#fff;">— Select —</option>${opts}
     </select>`;
 }
@@ -403,11 +409,10 @@ function jobBrandCell(id, current) {
     const brands = ['MoveAll','TBMI'];
     const isCustom = current && !brands.includes(current);
     const opts = brands.map(b => `<option value="${b}" style="background:#111827;color:#fff;" ${b === current ? 'selected' : ''}>${b}</option>`).join('') + 
-        (isCustom ? `<option value="${escapeHtml(current)}" selected style="background:#111827;color:#fff;">${escapeHtml(current)}</option>` : '') +
-        `<option value="__custom__" style="background:#111827;color:#f59e0b;">➕ Add custom</option>`;
+        (isCustom ? `<option value="${escapeHtml(current)}" selected style="background:#111827;color:#fff;">${escapeHtml(current)}</option>` : '');
     const c = BRAND_COLORS[current] || { bg:'#6b7280', text:'#fff' };
     return `<select class="inline-select" style="background:${c.bg};color:${c.text};border:none;font-weight:800;font-size:0.78rem;border-radius:6px;padding:3px 22px 3px 10px;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center;min-width:95px;width:max-content;"
-        onchange="handleDropdownChange(${id},'brand',this)">
+        onchange="inlineJobSave(${id},'brand',this.value);updateJobBrandColor(this)">
         <option value="" style="background:#111827;color:#fff;">— Select —</option>${opts}
     </select>`;
 }
@@ -433,11 +438,10 @@ function jobInvoiceCell(id, current) {
     const opts = INVOICE_OPTIONS.map(o => 
         `<option value="${o.label}" style="background:#111827;color:#fff;" ${o.label === current ? 'selected' : ''}>${o.label}</option>`
     ).join('') + 
-        (isCustom ? `<option value="${escapeHtml(current)}" selected style="background:#111827;color:#fff;">${escapeHtml(current)}</option>` : '') +
-        `<option value="__custom__" style="background:#111827;color:#f59e0b;">➕ Add custom</option>`;
+        (isCustom ? `<option value="${escapeHtml(current)}" selected style="background:#111827;color:#fff;">${escapeHtml(current)}</option>` : '');
     const c = INVOICE_OPTIONS.find(o => o.label === current) || { color: '#6b7280' };
     return `<select class="inline-select" style="background:${c.color};color:#fff;border:none;font-weight:700;font-size:0.75rem;border-radius:6px;padding:3px 22px 3px 10px;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center;min-width:110px;width:max-content;"
-        onchange="handleDropdownChange(${id}, 'invoice', this)">
+        onchange="inlineInvoiceSave(${id}, this.value)">
         <option value="" style="background:#111827;color:#fff;">— Invoice —</option>${opts}
     </select>`;
 }
@@ -446,6 +450,7 @@ async function inlineInvoiceSave(id, value) {
     if (value === 'Done') {
         await api.put(`/jobs/${id}`, { invoice: value, status: 'completed' });
         showToast('Job Completed', 'Job moved to Past Jobs', 'success');
+        syncJobToContact(id);
         loadJobsData();
     } else {
         await inlineJobSave(id, 'invoice', value);
@@ -486,6 +491,7 @@ async function markJobCompleted(id) {
     const res = await api.put(`/jobs/${id}`, { status: 'completed' });
     if (res.success) {
         showToast('Success', 'Job marked as completed', 'success');
+        syncJobToContact(id);
         loadJobsData();
     } else {
         showToast('Error', res.error || 'Failed to complete job', 'error');
@@ -500,6 +506,45 @@ async function markJobUpcoming(id) {
     } else {
         showToast('Error', res.error || 'Failed to move job', 'error');
     }
+}
+
+async function syncJobToContact(jobId) {
+    try {
+        const jobRes = await api.get(`/jobs/${jobId}`);
+        if (!jobRes.success) return;
+        const j = jobRes.data;
+        if (!j || (!j.first_name && !j.last_name)) return;
+        
+        const contactsRes = await api.get('/contacts', { limit: 1000 });
+        let existingId = null;
+        if (contactsRes.success) {
+            const contacts = contactsRes.data || [];
+            const match = contacts.find(c => 
+                (c.mobile && j.phone && c.mobile === j.phone) || 
+                (c.email && j.email && c.email === j.email)
+            );
+            if (match) existingId = match.id;
+        }
+
+        const data = {
+            client_name: ((j.first_name || '') + ' ' + (j.last_name || '')).trim() || 'Unknown Client',
+            address: j.move_out || '',
+            first_name: j.first_name || '',
+            last_name: j.last_name || '',
+            email: j.email || '',
+            mobile: j.phone || '',
+            category: j.category || '',
+            last_move_date: j.move_date ? j.move_date.split('T')[0] : new Date().toISOString().split('T')[0],
+            last_move_in: j.move_in || '',
+            last_team: j.contractor || ''
+        };
+
+        if (existingId) {
+            await api.put(`/contacts/${existingId}`, data);
+        } else {
+            await api.post('/contacts', data);
+        }
+    } catch(e) { console.error('Failed to sync contact:', e); }
 }
 
 // ─── Searchable contractor dropdown ──────────────────────────────────────────
@@ -571,11 +616,6 @@ function buildContractorDropList(jobId, currentVal, search) {
         onmouseenter="this.style.background='rgba(245,158,11,.08)'" onmouseleave="this.style.background='transparent'">
         ⚠ New TBC
     </div>`;
-    html += `<div onclick="handleCustomContractor(${jobId})"
-        style="padding:8px 14px;cursor:pointer;font-size:0.88rem;color:#f59e0b;border-top:1px solid var(--border-color,#374151)"
-        onmouseenter="this.style.background='rgba(245,158,11,.08)'" onmouseleave="this.style.background='transparent'">
-        ➕ Add custom
-    </div>`;
     return html || '<div style="padding:12px 14px;color:var(--text-muted);font-size:0.85rem">No results</div>';
 }
 
@@ -584,15 +624,6 @@ function filterContractorDrop(input, jobId) {
     if (list) list.innerHTML = buildContractorDropList(jobId, '', input.value);
 }
 
-async function handleCustomContractor(jobId) {
-    closeContractorDrop();
-    const val = prompt('Enter custom contractor:');
-    if (val && val.trim()) {
-        const cell = document.querySelector(`tr[data-id="${jobId}"] .job-contractor-cell`);
-        if (cell) cell.innerHTML = `<span style="font-size:0.85rem;cursor:pointer">${escapeHtml(val.trim())}</span>`;
-        await inlineJobSave(jobId, 'contractor', val.trim());
-    }
-}
 
 async function selectContractorInline(jobId, company, el) {
     closeContractorDrop();
@@ -634,7 +665,7 @@ function renderMasterView(jobs) {
             <td>${isAdmin() ? jobBrandCell(j.id, j.brand) : brandBadge(j.brand)}</td>
             <td style="white-space:nowrap;color:var(--text-muted);font-size:0.82rem">${dateStr}</td>
             ${isAdmin() ? `<td style="min-width:120px">${jobEditCell(j.id,'notes',j.notes,'160px')}</td>` : ''}
-            ${isAdmin() ? `<td style="min-width:100px">${jobEditCell(j.id,'team',j.team,'120px')}</td>` : ''}
+            <td>${isAdmin() ? jobCategoryCell(j.id, j.category) : escapeHtml(j.category || '—')}</td>
             ${isAdmin() ? `<td style="min-width:140px">${jobContractorCell(j.id, j.contractor)}</td>` : ''}
             ${isAdmin() ? `<td style="min-width:120px">${jobInvoiceCell(j.id, j.invoice)}</td>` : ''}
             <td style="min-width:90px">${jobEditCell(j.id,'extras',j.extras,'110px')}</td>
@@ -884,7 +915,7 @@ async function editJob(id) {
         setJobVal('job-email', j.email);
         setJobVal('job-extras', j.extras);
         setJobVal('job-deposit', j.deposit);
-        setJobVal('job-invoice', j.invoice);
+        setSelectValSafe('job-invoice', j.invoice);
         setJobVal('job-time-sheet', j.time_sheet);
         setJobVal('job-move-out', j.move_out);
         setJobVal('job-second-stop', j.second_stop);
@@ -904,7 +935,9 @@ async function editJob(id) {
         setJobVal('job-last-sms', j.last_sms);
         setJobVal('job-status', j.status);
         setJobVal('job-brand', j.brand);
-        setJobVal('job-price-point', j.price_point);
+        setSelectValSafe('job-price-point', j.price_point);
+        setSelectValSafe('job-category', j.category);
+        setJobVal('job-notes', j.notes);
         setJobVal('job-notes', j.notes);
         setJobVal('job-sell-price', j.sell_price);
         setJobVal('job-buy-price', j.buy_price);
@@ -913,7 +946,7 @@ async function editJob(id) {
         }
         populateContractorDropdown();
         // Set contractor after dropdown is populated
-        setTimeout(() => setJobVal('job-contractor', j.contractor), 50);
+        setTimeout(() => setSelectValSafe('job-contractor', j.contractor), 50);
         // Hide Previous button on edit
         const prevBtn = document.getElementById('job-prev-btn');
         if (prevBtn) prevBtn.style.display = 'none';
@@ -943,7 +976,7 @@ async function saveJob(e) {
         last_name: getJobVal('job-last-name'),
         phone: getJobVal('job-phone'),
         email: getJobVal('job-email'),
-        team: null,
+        category: getJobVal('job-category'),
         contractor: getJobVal('job-contractor'),
         extras: getJobVal('job-extras'),
         deposit: getJobVal('job-deposit'),
@@ -967,6 +1000,9 @@ async function saveJob(e) {
         const res = editId ? await api.put(`/jobs/${editId}`, data) : await api.post('/jobs', data);
         if (res.success) {
             showToast('Success', editId ? 'Job updated' : 'Job created', 'success');
+            if (data.status === 'completed') {
+                syncJobToContact(editId || res.data?.id);
+            }
             closeModal('job-modal');
             loadJobsData();
         } else {
