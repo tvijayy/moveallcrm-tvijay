@@ -71,7 +71,6 @@ function renderContractorsTable(contractors) {
             <td>${escapeHtml(c.rates || '—')}</td>
             <td>${escapeHtml(c.trucks || '—')}</td>
             <td>${escapeHtml(c.first_name || '—')}</td>
-            <td>${escapeHtml(c.last_name || '—')}</td>
             <td>${escapeHtml(c.phone || '—')}</td>
             <td>${escapeHtml(c.email || '—')}</td>
             <td>${c.linkedin ? `<a href="${escapeHtml(c.linkedin)}" target="_blank" rel="noopener">View</a>` : '—'}</td>
