@@ -74,9 +74,12 @@ function renderContractorsTable(contractors) {
             <td>${escapeHtml(c.phone || '—')}</td>
             <td>${escapeHtml(c.email || '—')}</td>
             <td>${c.linkedin ? `<a href="${escapeHtml(c.linkedin)}" target="_blank" rel="noopener">View</a>` : '—'}</td>
-            <td class="actions-cell">
-                <button class="btn btn-sm btn-outline" onclick="editContractor(${c.id})">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteContractor(${c.id})">Delete</button>
+            <td class="actions-cell" style="white-space:nowrap; position:relative;">
+                <button class="btn btn-sm btn-ghost" onclick="toggleContractorMenu(${c.id}, event)" style="font-size:1.2rem;padding:4px 8px;">⋮</button>
+                <div id="contractor-menu-${c.id}" class="contractor-action-menu hidden" style="position:absolute;right:10px;top:100%;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:6px;z-index:99;display:flex;flex-direction:column;min-width:160px;box-shadow:var(--shadow-md);">
+                    <button class="btn btn-ghost" style="justify-content:flex-start;border-radius:0;border-bottom:1px solid var(--border-color);padding:10px 16px;" onclick="editContractor(${c.id})">Edit</button>
+                    <button class="btn btn-ghost text-danger" style="justify-content:flex-start;border-radius:0;padding:10px 16px;color:var(--danger);" onclick="deleteContractor(${c.id})">Delete</button>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -147,3 +150,16 @@ async function deleteContractor(id) {
         showToast('Error', 'Failed to delete contractor', 'error');
     }
 }
+
+function toggleContractorMenu(id, e) {
+    e.stopPropagation();
+    document.querySelectorAll('.contractor-action-menu').forEach(el => {
+        if (el.id !== `contractor-menu-${id}`) el.classList.add('hidden');
+    });
+    const menu = document.getElementById(`contractor-menu-${id}`);
+    if (menu) menu.classList.toggle('hidden');
+}
+
+document.addEventListener('click', () => {
+    document.querySelectorAll('.contractor-action-menu').forEach(el => el.classList.add('hidden'));
+});

@@ -304,7 +304,7 @@ function jobCategoryCell(id, current) {
         `<option value="${c}" style="background:#111827;color:#fff;" ${c === current ? 'selected' : ''}>${c}</option>`
     ).join('');
     const cColor = current ? '#6366f1' : '#6b7280';
-    return `<select class="inline-select" style="background:transparent;color:${cColor};border:none;font-weight:600;font-size:0.8rem;cursor:pointer;appearance:none;-webkit-appearance:none;"
+    return `<select class="inline-select" style="background:transparent;color:${cColor};border:none;font-weight:600;font-size:0.8rem;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:110px;width:max-content;text-align:center;"
         onchange="inlineJobSave(${id},'category',this.value);this.style.color=this.value?'#6366f1':'#6b7280'">
         <option value="" style="background:#111827;color:#fff;">— Category —</option>${opts}
     </select>`;

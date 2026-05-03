@@ -669,7 +669,7 @@ async function loadLeadsData() {
         let leads = res.data || [];
 
         if      (currentLeadsTab === 'active')    leads = leads.filter(l => !l.is_completed && !ARCHIVE_STATUSES.includes(l.status));
-        else if (currentLeadsTab === 'completed') leads = leads.filter(l => !!l.is_completed);
+        else if (currentLeadsTab === 'completed') leads = leads.filter(l => !!l.is_completed && !ARCHIVE_STATUSES.includes(l.status));
         else if (currentLeadsTab === 'archive')   leads = leads.filter(l => ARCHIVE_STATUSES.includes(l.status));
 
         const statusFilter = document.getElementById('leads-status-filter')?.value;
