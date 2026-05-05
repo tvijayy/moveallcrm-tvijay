@@ -416,9 +416,9 @@ function showLeadMenu(btn, leadId, phone, email, leadName) {
             ✉️ Send 3M Booking Form
         </div>
         <div class="ctx-divider"></div>
-        ${currentLeadsTab === 'completed' ? `
+        ${currentLeadsTab === 'completed' || currentLeadsTab === 'archive' ? `
         <div class="ctx-item" onclick="moveToActiveLeads(${leadId});closeCtxMenu()">
-            ↩️ Move to Active Leads
+            ↩️ Move back to Active Leads
         </div>
         <div class="ctx-divider"></div>
         ` : ''}
@@ -477,7 +477,11 @@ async function triggerFromMenu(leadId, action, phone, email) {
 
 async function moveToActiveLeads(id) {
     try {
-        const res = await api.put(`/leads/${id}`, { is_completed: false });
+        const updates = { is_completed: false };
+        if (currentLeadsTab === 'archive') {
+            updates.status = 'new_to_call';
+        }
+        const res = await api.put(`/leads/${id}`, updates);
         if (res.success) {
             showToast('Success', 'Lead moved to Active tab', 'success');
             loadLeadsData();
